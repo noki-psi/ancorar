@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Sparkles, ArrowRight, Activity, ShieldCheck } from 'lucide-react';
+import { Brain, ArrowRight, Activity, ShieldCheck } from 'lucide-react';
 
 interface StepOnboardingProps {
   onNext: () => void;

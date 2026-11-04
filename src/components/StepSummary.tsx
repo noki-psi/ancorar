@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, TrendingDown, ExternalLink, RotateCcw, Award, CheckCircle, Cloud, CloudOff } from 'lucide-react';
+import { Sparkles, TrendingDown, ExternalLink, RotateCcw, Award, Cloud, CloudOff } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface StepSummaryProps {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Volume2, VolumeX, CheckCircle, RotateCcw, Info } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, CheckCircle, Info } from 'lucide-react';
 import { BreathPhase } from '../types';
 
 interface BreathingEngineProps {

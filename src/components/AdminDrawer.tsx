@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Users, TrendingDown, Clock, RefreshCw, Database, CloudOff, FileSpreadsheet, ShieldAlert } from 'lucide-react';
+import { X, RefreshCw, Database, FileSpreadsheet, ShieldAlert } from 'lucide-react';
 import { SessionRecord } from '../types';
 import { fetchAllSessions, isSupabaseConfigured } from '../lib/supabase';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, ShieldCheck, HeartHandshake, ArrowRight } from 'lucide-react';
+import { ShieldCheck, HeartHandshake, ArrowRight } from 'lucide-react';
 
 interface StepCompassionProps {
   preTension: number;
