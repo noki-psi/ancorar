@@ -27,6 +27,7 @@ jspm_packages/
 dist/
 dist-ssr/
 *.local
+.netlify/
 
 # Editor / OS files
 .DS_Store
