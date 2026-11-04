@@ -10,7 +10,7 @@ import { StepPostCheckout } from './components/StepPostCheckout';
 import { StepSummary } from './components/StepSummary';
 import { AdminDrawer } from './components/AdminDrawer';
 import { Step } from './types';
-import { getAnonymousUserId, saveSession, isSupabaseConfigured } from './lib/supabase';
+import { getAnonymousUserId, saveSession, isSupabaseConfigured, checkSupabaseConnection } from './lib/supabase';
 
 export function App() {
   const [currentStep, setCurrentStep] = useState<Step>('onboarding');
@@ -20,9 +20,12 @@ export function App() {
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [isOffline, setIsOffline] = useState<boolean>(!isSupabaseConfigured);
 
-  // Initialize or ensure anonymous ID on first render
+  // Initialize or ensure anonymous ID on first render and test connection
   useEffect(() => {
     getAnonymousUserId();
+    checkSupabaseConnection().then(online => {
+      setIsOffline(!online);
+    });
   }, []);
 
   const handleFinishBreathing = (actualDuration: number) => {
