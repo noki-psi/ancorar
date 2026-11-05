@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense } from 'react';
+import { AdminDrawer as AdminDrawerComponent } from './components/AdminDrawer';
+const AdminDrawer = lazy(() => import('./components/AdminDrawer'));
+
 import { AnimatePresence } from 'framer-motion';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
