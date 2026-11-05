@@ -118,8 +118,8 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
                 <span className={`w-2 h-2 rounded-full ${isOfflineMode ? 'bg-amber-400' : 'bg-emerald-400 animate-pulse'}`} />
                 <span className="text-slate-300 font-medium">
                   {isOfflineMode 
-                    ? 'Modo Fallback Offline (armazenando localmente)' 
-                    : 'Conexão ativa com Supabase Cloud'}
+                    ? 'Modo Offline (dados salvos localmente)' 
+                    : 'Base de dados de pesquisa conectada (dados 100% anônimos)'}
                 </span>
               </div>
               <button
@@ -170,15 +170,15 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
                 <span>Exportar CSV para Relatório UNI-RN</span>
               </button>
 
-              {/* SQL Setup Helper if Supabase not configured */}
+              {/* Setup Helper if Supabase not configured */}
               {!isSupabaseConfigured && (
                 <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-200 text-xs space-y-1">
                   <div className="flex items-center gap-1.5 font-bold">
                     <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Dica para ativação do Supabase Cloud:</span>
+                    <span>Sincronização em nuvem da pesquisa:</span>
                   </div>
                   <p className="text-[11px] text-amber-300/90">
-                    Defina <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-100">VITE_SUPABASE_URL</code> e <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-100">VITE_SUPABASE_ANON_KEY</code> no seu arquivo <code>.env</code> para salvar os dados em nuvem.
+                    Defina <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-100">VITE_SUPABASE_URL</code> e <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-100">VITE_SUPABASE_ANON_KEY</code> no seu arquivo <code>.env</code> para sincronizar os dados com a base da pesquisa.
                   </p>
                 </div>
               )}
@@ -235,3 +235,5 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
     </AnimatePresence>
   );
 };
+
+export default AdminDrawer;

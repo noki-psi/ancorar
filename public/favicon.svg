@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="ancorar-grad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22d3ee" />
+      <stop offset="50%" stop-color="#14b8a6" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <radialGradient id="ancorar-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#090d16" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Background rounded canvas -->
+  <rect width="48" height="48" rx="14" fill="#090d16" />
+  <rect width="48" height="48" rx="14" fill="url(#ancorar-glow)" />
+  <rect x="0.75" y="0.75" width="46.5" height="46.5" rx="13.25" stroke="#1e293b" stroke-width="1.5" />
+
+  <!-- Zen breathing anchor symbol -->
+  <!-- Top ring / breath circle -->
+  <circle cx="24" cy="14" r="3.75" stroke="url(#ancorar-grad)" stroke-width="2.5" stroke-linecap="round" />
+  
+  <!-- Central stem -->
+  <line x1="24" y1="18" x2="24" y2="35" stroke="url(#ancorar-grad)" stroke-width="2.5" stroke-linecap="round" />
+  
+  <!-- Horizontal stabilizing bar -->
+  <line x1="17" y1="22" x2="31" y2="22" stroke="url(#ancorar-grad)" stroke-width="2.2" stroke-linecap="round" />
+  
+  <!-- Fluid curved anchor base (cradle / wave) -->
+  <path d="M12 28C13 35.5 19 38 24 38C29 38 35 35.5 36 28" stroke="url(#ancorar-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

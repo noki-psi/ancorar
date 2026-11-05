@@ -74,17 +74,17 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
       className="flex flex-col flex-1 justify-center space-y-5 py-3"
     >
       {/* Status da gravação de dados */}
-      <div className="flex items-center justify-between text-[11px] px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span className="text-slate-400">Registro de Dados de Pesquisa:</span>
-        <span className={`inline-flex items-center gap-1 font-semibold ${isOffline ? 'text-amber-400' : 'text-emerald-400'}`}>
+      <div className="flex items-center justify-between text-[11px] px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-800">
+        <span className="text-slate-400">Base de dados da pesquisa:</span>
+        <span className={`inline-flex items-center gap-1.5 font-semibold ${isOffline ? 'text-amber-300' : 'text-emerald-300'}`}>
           {isOffline ? <CloudOff className="w-3.5 h-3.5" /> : <Cloud className="w-3.5 h-3.5" />}
-          {isOffline ? 'Salvo localmente (offline)' : 'Sincronizado no Supabase'}
+          {isOffline ? 'Salvo no seu aparelho (offline)' : 'Enviado à pesquisa UNI-RN (anônimo)'}
         </span>
       </div>
 
       {/* Card Principal de Impacto */}
       <div className="p-6 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 shadow-xl space-y-4 text-center relative overflow-hidden">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${feedback.badgeColor}">
+        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${feedback.badgeColor}`}>
           <Award className="w-4 h-4 text-cyan-400" />
           <span>{feedback.title}</span>
         </div>

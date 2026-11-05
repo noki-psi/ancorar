@@ -1,7 +1,4 @@
-import { lazy, Suspense } from 'react';
-import { AdminDrawer as AdminDrawerComponent } from './components/AdminDrawer';
-const AdminDrawer = lazy(() => import('./components/AdminDrawer'));
-
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -11,9 +8,10 @@ import { StepCompassion } from './components/StepCompassion';
 import { BreathingEngine } from './components/BreathingEngine';
 import { StepPostCheckout } from './components/StepPostCheckout';
 import { StepSummary } from './components/StepSummary';
-import { AdminDrawer } from './components/AdminDrawer';
 import { Step } from './types';
 import { getAnonymousUserId, saveSession, isSupabaseConfigured, checkSupabaseConnection } from './lib/supabase';
+
+const AdminDrawer = lazy(() => import('./components/AdminDrawer'));
 
 export function App() {
   const [currentStep, setCurrentStep] = useState<Step>('onboarding');
@@ -122,7 +120,9 @@ export function App() {
       <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
 
       {/* Admin / Extension Research Metrics Drawer */}
-      <AdminDrawer isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+      <Suspense fallback={null}>
+        <AdminDrawer isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+      </Suspense>
     </div>
   );
 }
