@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAdmin, isOnline }) => {
         <div className="flex items-center justify-center gap-1.5 py-1 px-2.5 rounded-lg bg-slate-900/80 border border-slate-800 text-[10.5px] text-slate-300 text-center font-medium shadow-inner">
           <HeartHandshake className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
           <span className="truncate">
-            Projeto de Extensão I • Teorias Comportamentalistas • UNI-RN
+            Projeto de Extensão I • Teorias Comportamentalistas • UNI-RN • CVV: <a href="tel:188" className="text-cyan-400 underline">188</a>
           </span>
         </div>
       </div>

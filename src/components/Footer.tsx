@@ -17,6 +17,9 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
           <p className="text-[10px] text-slate-400">
             Orientação: <span className="text-slate-300 font-medium">Profa. Ms. Marianna Lucena</span>
           </p>
+          <p className="text-[10px] text-slate-400 mt-1">
+            CVV – Centro de Valorização da Vida: <a href="tel:188" className="text-cyan-400 underline">188</a>
+          </p>
         </div>
 
         <div className="pt-2 border-t border-slate-900/60 flex items-center justify-center gap-4 text-[11px]">
