@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, RefreshCw, Database, FileSpreadsheet, ShieldAlert } from 'lucide-react';
 import { SessionRecord } from '../types';
 import { fetchAllSessions, isSupabaseConfigured } from '../lib/supabase';
+import { getTensionEmoji } from '../lib/constants';
 
 interface AdminDrawerProps {
   isOpen: boolean;
@@ -148,9 +149,11 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
 
                 <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-center">
                   <div className="text-[10px] uppercase font-bold text-slate-400">Pré vs Pós Médio</div>
-                  <div className="text-sm font-bold text-slate-200 mt-1.5 flex items-center justify-center gap-1">
+                  <div className="text-sm font-bold text-slate-200 mt-1.5 flex items-center justify-center gap-1.5">
+                    <span>{getTensionEmoji(Number(avgPreTension))}</span>
                     <span className="text-rose-400">{avgPreTension}</span>
-                    <span>→</span>
+                    <span className="text-slate-500">→</span>
+                    <span>{getTensionEmoji(Number(avgPostTension))}</span>
                     <span className="text-emerald-400">{avgPostTension}</span>
                   </div>
                 </div>
@@ -207,9 +210,13 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
                               {s.anonymous_user_id.slice(0, 12)}...
                             </div>
                             <div className="text-[11px] text-slate-300 flex items-center gap-2">
-                              <span>Tensão: <strong>{s.pre_tension}</strong> → <strong>{s.post_tension}</strong></span>
-                              <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
-                                delta > 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'
+                              <span>
+                                {getTensionEmoji(s.pre_tension)} <strong>{s.pre_tension}</strong>
+                                <span className="mx-1 text-slate-500">→</span>
+                                {getTensionEmoji(s.post_tension)} <strong>{s.post_tension}</strong>
+                              </span>
+                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                delta > 0 ? 'bg-emerald-500/20 text-emerald-300' : delta === 0 ? 'bg-slate-800 text-slate-400' : 'bg-rose-500/20 text-rose-300'
                               }`}>
                                 {delta > 0 ? `-${delta}` : delta === 0 ? '0' : `+${Math.abs(delta)}`}
                               </span>
