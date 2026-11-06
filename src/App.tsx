@@ -9,7 +9,7 @@ import { BreathingEngine } from './components/BreathingEngine';
 import { StepPostCheckout } from './components/StepPostCheckout';
 import { StepSummary } from './components/StepSummary';
 import { Step } from './types';
-import { getAnonymousUserId, saveSession, isSupabaseConfigured, checkSupabaseConnection } from './lib/supabase';
+import { getAnonymousUserId, saveSession, isSupabaseConfigured, checkSupabaseConnection, syncOfflineSessions } from './lib/supabase';
 import { getBreathingSettings, saveBreathingSettings, BreathingSettings, getPatternRaw, formatPatternDisplay } from './lib/settings';
 
 const AdminDrawer = lazy(() => import('./components/AdminDrawer'));
@@ -27,9 +27,21 @@ export function App() {
 
   useEffect(() => {
     getAnonymousUserId();
-    checkSupabaseConnection().then(online => {
-      setIsOffline(!online);
-    });
+    const handleConnectivity = () => {
+      checkSupabaseConnection().then(online => {
+        setIsOffline(!online);
+        if (online) {
+          syncOfflineSessions();
+        }
+      });
+    };
+
+    handleConnectivity();
+
+    window.addEventListener('online', handleConnectivity);
+    return () => {
+      window.removeEventListener('online', handleConnectivity);
+    };
   }, []);
 
   const handleUpdateSettings = (newSettings: BreathingSettings) => {
@@ -134,6 +146,7 @@ export function App() {
             <BreathingEngine
               key="breathing"
               settings={breathingSettings}
+              onUpdateSettings={handleUpdateSettings}
               onComplete={handleFinishBreathing}
             />
           )}

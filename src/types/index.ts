@@ -8,6 +8,7 @@ export interface SessionRecord {
   breathing_pattern?: string; // e.g. "326" or "3262"
   target_duration_seconds?: number; // e.g. 120
   created_at?: string;
+  synced_to_cloud?: boolean;
 }
 
 export type Step = 

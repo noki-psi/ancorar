@@ -285,11 +285,11 @@ export const BreathingSettingsModal: React.FC<BreathingSettingsModalProps> = ({
               {/* Hold (Pre-Exhale) */}
               <div 
                 className="p-3.5 rounded-2xl bg-petrol-950/60 border border-petrol-800/70 flex items-center justify-between"
-                title="Pausa com os pulmões confortavelmente cheios"
+                title="Suspensão com os pulmões confortavelmente cheios"
               >
                 <div>
-                  <span className="text-sm font-medium text-slate-100 block">Retenção (Pulmões cheios)</span>
-                  <span className="text-xs text-slate-400">Pausa suave no ápice</span>
+                  <span className="text-sm font-medium text-slate-100 block">Suspensão (Pulmões cheios)</span>
+                  <span className="text-xs text-slate-400">Manter o ar suavemente</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -346,14 +346,14 @@ export const BreathingSettingsModal: React.FC<BreathingSettingsModalProps> = ({
                 </div>
               </div>
 
-              {/* Hold Post-Exhale (NEW) */}
+              {/* Hold Post-Exhale */}
               <div 
                 className="p-3.5 rounded-2xl bg-petrol-950/60 border border-petrol-800/70 flex items-center justify-between"
-                title="Pausa opcional com pulmões vazios antes de iniciar nova inspiração (ex: ritmo quadrado ou 3:2:6:2)"
+                title="Suspensão com pulmões vazios antes de iniciar nova inspiração (ex: ritmo quadrado ou 3:2:6:2)"
               >
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium text-slate-100 block">Pausa pós-exalação</span>
+                    <span className="text-sm font-medium text-slate-100 block">Suspensão pós-exalação</span>
                     {current.holdPostExhaleDuration === 0 && (
                       <span className="text-[10px] uppercase font-bold text-slate-400 bg-petrol-900 px-1.5 py-0.5 rounded border border-petrol-800">
                         Opcional
@@ -361,7 +361,7 @@ export const BreathingSettingsModal: React.FC<BreathingSettingsModalProps> = ({
                     )}
                   </div>
                   <span className="text-xs text-slate-400">
-                    {current.holdPostExhaleDuration === 0 ? 'Desativada (padrão 3:2:6)' : 'Manter pulmões vazios'}
+                    {current.holdPostExhaleDuration === 0 ? 'Desativada (padrão 3:2:6)' : 'Sem tensões (pulmões vazios)'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -399,7 +399,7 @@ export const BreathingSettingsModal: React.FC<BreathingSettingsModalProps> = ({
                 <span className="font-medium text-slate-200">{cycleCount} ciclos</span>
               </div>
               <p className="text-xs text-slate-400 pt-1.5 border-t border-petrol-800/40 leading-relaxed">
-                Padrão científico recomendado: 3:2:6 (2 min). A pausa pós-exalação (ex: 3:2:6:2) permite explorar respirações mais contemplativas.
+                Padrão científico recomendado: 3:2:6 (2 min). A suspensão pós-exalação (ex: 3:2:6:2) permite explorar respirações mais contemplativas.
               </p>
             </div>
           </div>

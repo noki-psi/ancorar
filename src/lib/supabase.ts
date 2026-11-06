@@ -52,12 +52,19 @@ export function getLocalSessions(): SessionRecord[] {
 export function saveLocalSession(session: SessionRecord): void {
   try {
     const sessions = getLocalSessions();
-    sessions.unshift({
+    const id = session.id || 'local_' + Math.random().toString(36).substring(2, 9);
+    const sessionData: SessionRecord = {
       ...session,
-      id: session.id || 'local_' + Math.random().toString(36).substring(2, 9),
+      id,
       tension_delta: session.pre_tension - session.post_tension,
       created_at: session.created_at || new Date().toISOString()
-    });
+    };
+    const existingIndex = sessions.findIndex(s => s.id === id);
+    if (existingIndex >= 0) {
+      sessions[existingIndex] = sessionData;
+    } else {
+      sessions.unshift(sessionData);
+    }
     localStorage.setItem(LOCAL_SESSIONS_KEY, JSON.stringify(sessions));
   } catch (e) {
     console.error('Failed to save session locally', e);
@@ -74,11 +81,79 @@ export async function checkSupabaseConnection(): Promise<boolean> {
   }
 }
 
+export async function syncOfflineSessions(): Promise<{ syncedCount: number }> {
+  if (!supabase) return { syncedCount: 0 };
+
+  const isOnline = await checkSupabaseConnection();
+  if (!isOnline) return { syncedCount: 0 };
+
+  const localSessions = getLocalSessions();
+  const unsynced = localSessions.filter(s => s.synced_to_cloud === false);
+
+  if (unsynced.length === 0) return { syncedCount: 0 };
+
+  let syncedCount = 0;
+  for (const session of unsynced) {
+    try {
+      let synced = false;
+      const res = await supabase.from('sessions').insert([
+        {
+          anonymous_user_id: session.anonymous_user_id,
+          pre_tension: session.pre_tension,
+          post_tension: session.post_tension,
+          duration_seconds: session.duration_seconds,
+          breathing_pattern: session.breathing_pattern || '326',
+          target_duration_seconds: session.target_duration_seconds || 120
+        }
+      ]);
+
+      if (!res.error) {
+        synced = true;
+      } else {
+        if (res.error.message?.includes('breathing_pattern') || res.error.message?.includes('target_duration_seconds') || res.error.code === 'PGRST204') {
+          const metadataTag = `#p=${session.breathing_pattern || '326'}&t=${session.target_duration_seconds || 120}`;
+          const fallbackRes = await supabase.from('sessions').insert([
+            {
+              anonymous_user_id: `${session.anonymous_user_id}${metadataTag}`,
+              pre_tension: session.pre_tension,
+              post_tension: session.post_tension,
+              duration_seconds: session.duration_seconds
+            }
+          ]);
+          if (!fallbackRes.error) {
+            synced = true;
+          }
+        }
+      }
+
+      if (synced) {
+        session.synced_to_cloud = true;
+        syncedCount++;
+      }
+    } catch (e) {
+      console.warn('Failed to sync offline session', e);
+    }
+  }
+
+  if (syncedCount > 0) {
+    try {
+      localStorage.setItem(LOCAL_SESSIONS_KEY, JSON.stringify(localSessions));
+    } catch (e) {
+      console.error('Failed to update localStorage after offline sync', e);
+    }
+  }
+
+  return { syncedCount };
+}
+
 export async function saveSession(data: Omit<SessionRecord, 'id' | 'created_at' | 'tension_delta'>): Promise<{ success: boolean; isOffline: boolean; error?: string }> {
-  const payload = {
+  const localId = 'local_' + Math.random().toString(36).substring(2, 9);
+  const payload: SessionRecord = {
     ...data,
+    id: localId,
     tension_delta: data.pre_tension - data.post_tension,
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    synced_to_cloud: false
   };
 
   // Always keep offline copy as cache/backup
@@ -89,6 +164,7 @@ export async function saveSession(data: Omit<SessionRecord, 'id' | 'created_at' 
   }
 
   try {
+    let synced = false;
     const { error } = await supabase.from('sessions').insert([
       {
         anonymous_user_id: data.anonymous_user_id,
@@ -100,7 +176,9 @@ export async function saveSession(data: Omit<SessionRecord, 'id' | 'created_at' 
       }
     ]);
 
-    if (error) {
+    if (!error) {
+      synced = true;
+    } else {
       // If error is due to missing columns in remote database (e.g. PGRST204), encode metadata into anonymous_user_id
       if (error.message?.includes('breathing_pattern') || error.message?.includes('target_duration_seconds') || error.code === 'PGRST204') {
         const metadataTag = `#p=${data.breathing_pattern || '326'}&t=${data.target_duration_seconds || 120}`;
@@ -114,14 +192,19 @@ export async function saveSession(data: Omit<SessionRecord, 'id' | 'created_at' 
           }
         ]);
         if (!fallbackRes.error) {
-          return { success: true, isOffline: false };
+          synced = true;
         }
       }
-      console.warn('Supabase sync error, stored locally:', error.message);
-      return { success: true, isOffline: true, error: error.message };
     }
 
-    return { success: true, isOffline: false };
+    if (synced) {
+      payload.synced_to_cloud = true;
+      saveLocalSession(payload);
+      return { success: true, isOffline: false };
+    }
+
+    console.warn('Supabase sync error, stored locally:', error?.message);
+    return { success: true, isOffline: true, error: error?.message };
   } catch (err: any) {
     console.warn('Network or Supabase failure, stored locally:', err?.message);
     return { success: true, isOffline: true, error: err?.message };
