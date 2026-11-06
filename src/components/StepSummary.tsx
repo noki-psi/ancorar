@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, TrendingDown, ExternalLink, RotateCcw, Award, Database } from 'lucide-react';
+import { Sparkles, TrendingDown, ExternalLink, RotateCcw, Award, Send, Database, Home, User } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { TENSION_LEVELS, getTensionEmoji } from '../lib/constants';
 import { formatPatternDisplay } from '../lib/settings';
@@ -13,6 +13,8 @@ interface StepSummaryProps {
   breathingPattern?: string;
   isOffline: boolean;
   onRestart: () => void;
+  onGoHome: () => void;
+  onOpenPersonal: () => void;
 }
 
 export const StepSummary: React.FC<StepSummaryProps> = ({
@@ -23,6 +25,8 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   breathingPattern = '326',
   isOffline,
   onRestart,
+  onGoHome,
+  onOpenPersonal,
 }) => {
   const delta = preTension - postTension;
   const surveyUrl = import.meta.env.VITE_SURVEY_URL || 'https://forms.gle/exemplo-questionario-unirn';
@@ -85,12 +89,21 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
       {/* Research Sync Badge */}
       <div 
         className="flex items-center justify-between text-xs sm:text-sm px-4 py-2.5 rounded-xl bg-petrol-900/60 border border-petrol-800/80"
-        title={isOffline ? "Dados armazenados localmente no seu navegador para privacidade" : "Dados salvos de forma 100% anônima na base de pesquisa"}
+        title={isOffline ? "Dados armazenados localmente no seu navegador para privacidade" : "Dados enviados anonimamente para a base da pesquisa"}
       >
-        <span className="text-slate-300 font-medium">Dados da pesquisa:</span>
+        <span className="text-slate-300 font-medium">Status da sessão:</span>
         <span className={`inline-flex items-center gap-1.5 font-semibold ${isOffline ? 'text-sand-300' : 'text-sage-300'}`}>
-          <Database className="w-4 h-4" />
-          {isOffline ? 'Salvo no aparelho (offline)' : 'Enviado'}
+          {isOffline ? (
+            <>
+              <Database className="w-4 h-4" />
+              <span>Salvo no aparelho (offline)</span>
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4 text-sage-300 -rotate-12" />
+              <span>Dados Enviados</span>
+            </>
+          )}
         </span>
       </div>
 
@@ -141,7 +154,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
           title="Tempo executado versus tempo previsto, e ritmo respiratório praticado"
         >
           <span>
-            Prática: <strong className="text-sand-200 font-semibold">{Math.round(durationSeconds)}s</strong> / {targetDurationSeconds}s
+            Duração: <strong className="text-sand-200 font-semibold">{Math.round(durationSeconds)}s</strong> / {targetDurationSeconds}s
           </span>
           <span className="font-mono text-xs text-sand-300 bg-petrol-950 px-2 py-0.5 rounded border border-petrol-800">
             Ritmo: {formatPatternDisplay(breathingPattern)}
@@ -177,15 +190,40 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
         </a>
       </div>
 
-      {/* Restart directly to breathing */}
-      <button
-        onClick={onRestart}
-        title="Iniciar novo ciclo de respiração imediatamente"
-        className="w-full py-4 px-6 rounded-2xl bg-sage-400 hover:bg-sage-300 text-petrol-950 font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
-      >
-        <RotateCcw className="w-5 h-5 text-petrol-950" />
-        <span>Fazer outra sessão de respiração</span>
-      </button>
+      {/* Action Buttons */}
+      <div className="space-y-2 pt-1">
+        {/* Restart directly to breathing */}
+        <button
+          onClick={onRestart}
+          title="Iniciar novo ciclo de respiração imediatamente"
+          className="w-full py-4 px-6 rounded-2xl bg-sage-400 hover:bg-sage-300 text-petrol-950 font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
+        >
+          <RotateCcw className="w-5 h-5 text-petrol-950" />
+          <span>Fazer outra sessão de respiração</span>
+        </button>
+
+        <div className="grid grid-cols-2 gap-2">
+          {/* Go Home / Back to start */}
+          <button
+            onClick={onGoHome}
+            title="Voltar para a tela inicial de acolhimento"
+            className="py-3 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-300 hover:text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
+          >
+            <Home className="w-4 h-4 text-sage-300" />
+            <span>Voltar ao início</span>
+          </button>
+
+          {/* Open Personal Dashboard */}
+          <button
+            onClick={onOpenPersonal}
+            title="Abrir meu histórico pessoal privado salvo neste aparelho"
+            className="py-3 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-300 hover:text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
+          >
+            <User className="w-4 h-4 text-sage-300" />
+            <span>Meu Histórico</span>
+          </button>
+        </div>
+      </div>
     </motion.div>
   );
 };

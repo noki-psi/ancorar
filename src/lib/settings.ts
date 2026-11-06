@@ -36,13 +36,29 @@ export function formatPatternDisplay(patternOrSettings: string | BreathingSettin
   return clean.split('').join(':');
 }
 
+export function formatDurationLabel(totalSeconds: number): string {
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  if (mins === 0) return `${secs}s`;
+  if (secs === 0) return `${mins} min`;
+  return `${mins}m ${secs}s`;
+}
+
+export function formatDurationLong(totalSeconds: number): string {
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  if (mins === 0) return `${secs} segundos`;
+  if (secs === 0) return `${mins} ${mins === 1 ? 'minuto' : 'minutos'}`;
+  return `${mins} min e ${secs} seg`;
+}
+
 export function getBreathingSettings(): BreathingSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (!raw) return DEFAULT_BREATHING_SETTINGS;
     const parsed = JSON.parse(raw);
     return {
-      totalDurationSeconds: Number(parsed.totalDurationSeconds) || 120,
+      totalDurationSeconds: Math.max(10, Math.min(3600, Number(parsed.totalDurationSeconds) || 120)),
       inhaleDuration: Math.max(2, Math.min(8, Number(parsed.inhaleDuration) || 3)),
       holdDuration: Math.max(0, Math.min(6, typeof parsed.holdDuration === 'number' ? parsed.holdDuration : 2)),
       exhaleDuration: Math.max(3, Math.min(12, Number(parsed.exhaleDuration) || 6)),

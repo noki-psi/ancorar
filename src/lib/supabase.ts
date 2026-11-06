@@ -31,6 +31,14 @@ export function getAnonymousUserId(): string {
   return userId;
 }
 
+export function clearLocalSessions(): void {
+  try {
+    localStorage.removeItem(LOCAL_SESSIONS_KEY);
+  } catch (e) {
+    console.error('Failed to clear local sessions', e);
+  }
+}
+
 export function getLocalSessions(): SessionRecord[] {
   try {
     const raw = localStorage.getItem(LOCAL_SESSIONS_KEY);
@@ -93,11 +101,13 @@ export async function saveSession(data: Omit<SessionRecord, 'id' | 'created_at' 
     ]);
 
     if (error) {
-      // If error might be due to missing columns in remote database, fallback to inserting core columns
-      if (error.message?.includes('breathing_pattern') || error.message?.includes('target_duration_seconds')) {
+      // If error is due to missing columns in remote database (e.g. PGRST204), encode metadata into anonymous_user_id
+      if (error.message?.includes('breathing_pattern') || error.message?.includes('target_duration_seconds') || error.code === 'PGRST204') {
+        const metadataTag = `#p=${data.breathing_pattern || '326'}&t=${data.target_duration_seconds || 120}`;
+        const encodedUserId = `${data.anonymous_user_id}${metadataTag}`;
         const fallbackRes = await supabase.from('sessions').insert([
           {
-            anonymous_user_id: data.anonymous_user_id,
+            anonymous_user_id: encodedUserId,
             pre_tension: data.pre_tension,
             post_tension: data.post_tension,
             duration_seconds: data.duration_seconds
@@ -136,15 +146,50 @@ export async function fetchAllSessions(): Promise<{ sessions: SessionRecord[]; i
       return { sessions: localSessions, isOffline: true };
     }
 
+    // Map and enrich data with metadata or local records
+    const mapped = data.map((item: any) => {
+      let userId = item.anonymous_user_id || '';
+      let pattern = item.breathing_pattern;
+      let targetDur = item.target_duration_seconds;
+
+      if (userId.includes('#p=')) {
+        const parts = userId.split('#p=');
+        userId = parts[0];
+        const params = new URLSearchParams('p=' + parts[1]);
+        if (!pattern) pattern = params.get('p') || undefined;
+        if (!targetDur) {
+          const t = params.get('t');
+          if (t) targetDur = Number(t);
+        }
+      }
+
+      // Check if user has corresponding local session to enrich details if missing
+      const localMatch = localSessions.find(ls => 
+        (ls.anonymous_user_id === userId || ls.id === item.id) &&
+        ls.pre_tension === item.pre_tension &&
+        ls.post_tension === item.post_tension
+      );
+
+      if (localMatch) {
+        if (!pattern) pattern = localMatch.breathing_pattern;
+        if (!targetDur) targetDur = localMatch.target_duration_seconds;
+      }
+
+      return {
+        ...item,
+        anonymous_user_id: userId,
+        breathing_pattern: pattern || '326',
+        target_duration_seconds: targetDur || 120,
+        tension_delta: item.tension_delta !== undefined ? item.tension_delta : (item.pre_tension - item.post_tension)
+      };
+    });
+
     // Merge remote sessions with any unsynced local sessions that have local_ prefix
     const localOnly = localSessions.filter(s => s.id?.startsWith('local_'));
-    const combined = [...data, ...localOnly];
+    const combined = [...mapped, ...localOnly];
     
     return { 
-      sessions: combined.map(item => ({
-        ...item,
-        tension_delta: item.tension_delta !== undefined ? item.tension_delta : (item.pre_tension - item.post_tension)
-      })), 
+      sessions: combined,
       isOffline: false 
     };
   } catch (err) {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pause, Play, Volume2, VolumeX, CheckCircle2 } from 'lucide-react';
 import { BreathPhase } from '../types';
-import { BreathingSettings, formatPatternDisplay } from '../lib/settings';
+import { BreathingSettings, formatPatternDisplay, formatDurationLabel } from '../lib/settings';
 
 interface BreathingEngineProps {
   onComplete: (actualDurationSeconds: number) => void;
@@ -168,7 +168,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
   const timerOptions = Array.from(new Set([60, settings.totalDurationSeconds, 180, 300]))
     .sort((a, b) => a - b)
     .slice(0, 3)
-    .map(s => ({ label: `${Math.round(s / 60)} min`, seconds: s }));
+    .map(s => ({ label: formatDurationLabel(s), seconds: s }));
 
   return (
     <motion.div

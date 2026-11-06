@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, ArrowRight, SlidersHorizontal } from 'lucide-react';
-import { BreathingSettings, formatPatternDisplay } from '../lib/settings';
+import { BreathingSettings, formatPatternDisplay, formatDurationLabel } from '../lib/settings';
 import { BreathingSettingsModal } from './BreathingSettingsModal';
 
 interface StepCompassionProps {
@@ -21,7 +21,7 @@ export const StepCompassion: React.FC<StepCompassionProps> = ({
 }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const durationMin = Math.round(settings.totalDurationSeconds / 60);
+  const durationLabel = formatDurationLabel(settings.totalDurationSeconds);
   const ratioLabel = formatPatternDisplay(settings);
 
   return (
@@ -78,7 +78,7 @@ export const StepCompassion: React.FC<StepCompassionProps> = ({
           className="w-full py-3 px-3 rounded-xl bg-petrol-900/60 hover:bg-petrol-900/90 text-slate-300 hover:text-sand-200 text-xs sm:text-sm font-medium flex items-center justify-center gap-2 border border-petrol-800/70 transition-colors"
         >
           <SlidersHorizontal className="w-4 h-4 text-sage-400" />
-          <span>Personalizar tempo ({durationMin} min • ritmo {ratioLabel})</span>
+          <span>Personalizar tempo ({durationLabel} • ritmo {ratioLabel})</span>
         </button>
 
         <button

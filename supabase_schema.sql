@@ -41,3 +41,13 @@ create policy "Allow anonymous select"
 -- 4. Índice para agilizar relatórios analíticos e ordenação por data
 create index if not exists idx_sessions_created_at on public.sessions (created_at desc);
 create index if not exists idx_sessions_user on public.sessions (anonymous_user_id);
+
+-- ==============================================================================
+-- 5. COMANDOS ÚTEIS PARA MANUTENÇÃO (Execute no SQL Editor do Supabase se desejar)
+-- ==============================================================================
+-- Para atualizar colunas em bancos existentes:
+-- alter table public.sessions add column if not exists breathing_pattern text default '326';
+-- alter table public.sessions add column if not exists target_duration_seconds integer default 120;
+
+-- Para ZERAR todos os dados de testes anteriores:
+-- truncate table public.sessions;

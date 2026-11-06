@@ -1,12 +1,13 @@
 import React from 'react';
-import { BookOpen, GraduationCap, ArrowUpRight, Heart } from 'lucide-react';
+import { BookOpen, GraduationCap, ArrowUpRight, Heart, User } from 'lucide-react';
 
 interface FooterProps {
   onOpenAdmin: () => void;
+  onOpenPersonal: () => void;
   hideDuringPractice?: boolean;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, hideDuringPractice }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onOpenPersonal, hideDuringPractice }) => {
   if (hideDuringPractice) {
     return null;
   }
@@ -20,6 +21,15 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, hideDuringPractice 
         </div>
 
         <div className="flex items-center justify-center gap-3 text-xs">
+          <button
+            onClick={onOpenPersonal}
+            title="Abrir histórico privado de sessões deste aparelho"
+            className="inline-flex items-center gap-1 text-slate-300 hover:text-sand-200 font-semibold hover:underline transition-all"
+          >
+            <User className="w-3.5 h-3.5 text-sage-400" />
+            <span>Meu Histórico</span>
+          </button>
+          <span className="text-petrol-700">•</span>
           <button
             onClick={onOpenAdmin}
             title="Abrir painel com estatísticas anônimas da pesquisa"

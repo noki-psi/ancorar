@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, RotateCcw, Clock, Wind, Check } from 'lucide-react';
-import { BreathingSettings, DEFAULT_BREATHING_SETTINGS, formatPatternDisplay } from '../lib/settings';
+import { BreathingSettings, DEFAULT_BREATHING_SETTINGS, formatPatternDisplay, formatDurationLong } from '../lib/settings';
 
 interface BreathingSettingsModalProps {
   isOpen: boolean;
@@ -10,11 +10,14 @@ interface BreathingSettingsModalProps {
   onSave: (settings: BreathingSettings) => void;
 }
 
-const DURATION_PRESETS = [
+const QUICK_PRESETS = [
+  { label: '30 seg', seconds: 30 },
   { label: '1 min', seconds: 60 },
+  { label: '1m 30s', seconds: 90 },
   { label: '2 min (Padrão)', seconds: 120 },
   { label: '3 min', seconds: 180 },
   { label: '5 min', seconds: 300 },
+  { label: '10 min', seconds: 600 },
 ];
 
 export const BreathingSettingsModal: React.FC<BreathingSettingsModalProps> = ({
@@ -86,32 +89,147 @@ export const BreathingSettingsModal: React.FC<BreathingSettingsModalProps> = ({
             </button>
           </div>
 
-          {/* 1. Tempo Disponível */}
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-200">
-              <Clock className="w-4 h-4 text-sage-400" />
-              <span>Tempo total disponível para a prática:</span>
+          {/* 1. Tempo Disponível (Segundos até 60 minutos com combinação min + seg) */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-sm font-semibold text-slate-200">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-sage-400" />
+                <span>Duração total da sessão:</span>
+              </div>
+              <span 
+                className="text-xs text-sand-300 font-medium bg-petrol-950 px-2.5 py-0.5 rounded-full border border-petrol-800"
+                title="Tempo total configurado para a prática"
+              >
+                {formatDurationLong(current.totalDurationSeconds)}
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {DURATION_PRESETS.map((p) => {
-                const isSelected = current.totalDurationSeconds === p.seconds;
-                return (
+            {/* Granular Minutes & Seconds Steppers */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* Minutes Stepper */}
+              <div 
+                className="p-3 rounded-2xl bg-petrol-950/70 border border-petrol-800/80 flex items-center justify-between"
+                title="Ajuste os minutos da sessão (0 a 60 min)"
+              >
+                <div>
+                  <span className="text-xs text-slate-400 block font-medium">Minutos</span>
+                  <span className="text-base sm:text-lg font-bold text-sand-200 tabular-nums">
+                    {Math.floor(current.totalDurationSeconds / 60)} min
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
                   <button
-                    key={p.seconds}
                     type="button"
-                    onClick={() => setCurrent({ ...current, totalDurationSeconds: p.seconds })}
-                    title={`Definir tempo total em ${p.label}`}
-                    className={`py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold border text-center transition-all ${
-                      isSelected
-                        ? 'border-sage-400 bg-sage-400/20 text-sand-200 shadow-sm'
-                        : 'border-petrol-800 bg-petrol-950/40 text-slate-300 hover:text-white hover:bg-petrol-800/40'
-                    }`}
+                    title="Diminuir 1 minuto"
+                    disabled={Math.floor(current.totalDurationSeconds / 60) <= 0 && (current.totalDurationSeconds % 60) <= 15}
+                    onClick={() => {
+                      const curMin = Math.floor(current.totalDurationSeconds / 60);
+                      const curSec = current.totalDurationSeconds % 60;
+                      const nextMin = Math.max(0, curMin - 1);
+                      const nextTotal = Math.max(15, nextMin * 60 + curSec);
+                      setCurrent({ ...current, totalDurationSeconds: nextTotal });
+                    }}
+                    className="w-8 h-8 rounded-lg bg-petrol-800 hover:bg-petrol-700 disabled:opacity-40 disabled:hover:bg-petrol-800 text-slate-200 font-bold text-base flex items-center justify-center transition-colors"
                   >
-                    {p.label}
+                    -
                   </button>
-                );
-              })}
+                  <button
+                    type="button"
+                    title="Aumentar 1 minuto"
+                    disabled={Math.floor(current.totalDurationSeconds / 60) >= 60}
+                    onClick={() => {
+                      const curMin = Math.floor(current.totalDurationSeconds / 60);
+                      const curSec = current.totalDurationSeconds % 60;
+                      const nextMin = Math.min(60, curMin + 1);
+                      const nextTotal = Math.min(3600, nextMin * 60 + (nextMin === 60 ? 0 : curSec));
+                      setCurrent({ ...current, totalDurationSeconds: nextTotal });
+                    }}
+                    className="w-8 h-8 rounded-lg bg-petrol-800 hover:bg-petrol-700 disabled:opacity-40 disabled:hover:bg-petrol-800 text-slate-200 font-bold text-base flex items-center justify-center transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Seconds Stepper */}
+              <div 
+                className="p-3 rounded-2xl bg-petrol-950/70 border border-petrol-800/80 flex items-center justify-between"
+                title="Ajuste os segundos da sessão (combinação flexível, ex: 1min30seg)"
+              >
+                <div>
+                  <span className="text-xs text-slate-400 block font-medium">Segundos</span>
+                  <span className="text-base sm:text-lg font-bold text-sand-200 tabular-nums">
+                    {current.totalDurationSeconds % 60} seg
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    title="Diminuir 15 segundos"
+                    disabled={current.totalDurationSeconds <= 15}
+                    onClick={() => {
+                      const curMin = Math.floor(current.totalDurationSeconds / 60);
+                      let curSec = current.totalDurationSeconds % 60;
+                      curSec = curSec - 15;
+                      let nextTotal = curMin * 60 + curSec;
+                      if (curSec < 0) {
+                        if (curMin > 0) {
+                          nextTotal = (curMin - 1) * 60 + 45;
+                        } else {
+                          nextTotal = 15;
+                        }
+                      }
+                      setCurrent({ ...current, totalDurationSeconds: Math.max(15, nextTotal) });
+                    }}
+                    className="w-8 h-8 rounded-lg bg-petrol-800 hover:bg-petrol-700 disabled:opacity-40 disabled:hover:bg-petrol-800 text-slate-200 font-bold text-base flex items-center justify-center transition-colors"
+                  >
+                    -
+                  </button>
+                  <button
+                    type="button"
+                    title="Aumentar 15 segundos"
+                    disabled={current.totalDurationSeconds >= 3600}
+                    onClick={() => {
+                      const curMin = Math.floor(current.totalDurationSeconds / 60);
+                      let curSec = current.totalDurationSeconds % 60;
+                      curSec = curSec + 15;
+                      let nextTotal = curMin * 60 + curSec;
+                      if (curSec >= 60) {
+                        nextTotal = (curMin + 1) * 60 + (curSec - 60);
+                      }
+                      setCurrent({ ...current, totalDurationSeconds: Math.min(3600, nextTotal) });
+                    }}
+                    className="w-8 h-8 rounded-lg bg-petrol-800 hover:bg-petrol-700 disabled:opacity-40 disabled:hover:bg-petrol-800 text-slate-200 font-bold text-base flex items-center justify-center transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick preset pills */}
+            <div className="space-y-1.5">
+              <span className="text-xs text-slate-400 font-medium block">Atalhos rápidos:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_PRESETS.map((p) => {
+                  const isSelected = current.totalDurationSeconds === p.seconds;
+                  return (
+                    <button
+                      key={p.seconds}
+                      type="button"
+                      onClick={() => setCurrent({ ...current, totalDurationSeconds: p.seconds })}
+                      title={`Definir duração para ${p.label}`}
+                      className={`py-1.5 px-2.5 rounded-xl text-xs font-semibold border text-center transition-all ${
+                        isSelected
+                          ? 'border-sage-400 bg-sage-400/20 text-sand-200 shadow-sm'
+                          : 'border-petrol-800 bg-petrol-950/40 text-slate-300 hover:text-white hover:bg-petrol-800/40'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

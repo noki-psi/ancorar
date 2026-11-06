@@ -1,9 +1,10 @@
 import React from 'react';
-import { Database, PhoneCall } from 'lucide-react';
+import { Database, PhoneCall, User } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface HeaderProps {
   onOpenAdmin: () => void;
+  onOpenPersonal: () => void;
   isOnline: boolean;
   stepProgress?: {
     current: number;
@@ -12,7 +13,7 @@ interface HeaderProps {
   };
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAdmin, isOnline, stepProgress }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenAdmin, onOpenPersonal, isOnline, stepProgress }) => {
   return (
     <header className="w-full pt-3 pb-2.5 px-4 backdrop-blur-md bg-petrol-950/80 border-b border-petrol-800/60 sticky top-0 z-40 transition-all">
       <div className="max-w-md mx-auto flex items-center justify-between">
@@ -49,6 +50,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAdmin, isOnline, stepProgr
             <PhoneCall className="w-3 h-3" />
             <span>188</span>
           </a>
+
+          {/* Personal Drawer button */}
+          <button
+            onClick={onOpenPersonal}
+            aria-label="Meu Histórico Pessoal"
+            title="Abrir meu histórico pessoal privado (salvo neste aparelho)"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-sand-200 transition-colors"
+          >
+            <User className="w-4 h-4" />
+          </button>
 
           {/* Admin / Research drawer */}
           <button

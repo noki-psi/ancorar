@@ -13,6 +13,7 @@ import { getAnonymousUserId, saveSession, isSupabaseConfigured, checkSupabaseCon
 import { getBreathingSettings, saveBreathingSettings, BreathingSettings, getPatternRaw, formatPatternDisplay } from './lib/settings';
 
 const AdminDrawer = lazy(() => import('./components/AdminDrawer'));
+const PersonalDrawer = lazy(() => import('./components/PersonalDrawer'));
 
 export function App() {
   const [currentStep, setCurrentStep] = useState<Step>('onboarding');
@@ -21,6 +22,7 @@ export function App() {
   const [breathingSettings, setBreathingSettings] = useState<BreathingSettings>(getBreathingSettings);
   const [sessionDuration, setSessionDuration] = useState<number>(() => getBreathingSettings().totalDurationSeconds);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
+  const [isPersonalOpen, setIsPersonalOpen] = useState<boolean>(false);
   const [isOffline, setIsOffline] = useState<boolean>(!isSupabaseConfigured);
 
   useEffect(() => {
@@ -63,6 +65,11 @@ export function App() {
     setCurrentStep('breathing');
   };
 
+  // Back to start / onboarding screen
+  const handleGoHome = () => {
+    setCurrentStep('onboarding');
+  };
+
   // Step indicator helper
   const getStepProgress = () => {
     switch (currentStep) {
@@ -90,7 +97,8 @@ export function App() {
 
       {/* Header */}
       <Header 
-        onOpenAdmin={() => setIsAdminOpen(true)} 
+        onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenPersonal={() => setIsPersonalOpen(true)}
         isOnline={!isOffline} 
         stepProgress={getStepProgress()} 
       />
@@ -149,6 +157,8 @@ export function App() {
               breathingPattern={getPatternRaw(breathingSettings)}
               isOffline={isOffline}
               onRestart={handleRestart}
+              onGoHome={handleGoHome}
+              onOpenPersonal={() => setIsPersonalOpen(true)}
             />
           )}
         </AnimatePresence>
@@ -156,9 +166,22 @@ export function App() {
 
       {/* Footer - hidden during breathing practice for zero distractions */}
       <Footer 
-        onOpenAdmin={() => setIsAdminOpen(true)} 
+        onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenPersonal={() => setIsPersonalOpen(true)}
         hideDuringPractice={currentStep === 'breathing'} 
       />
+
+      {/* Personal Dashboard Drawer */}
+      <Suspense fallback={null}>
+        <PersonalDrawer 
+          isOpen={isPersonalOpen} 
+          onClose={() => setIsPersonalOpen(false)} 
+          onStartSession={() => {
+            setSessionDuration(breathingSettings.totalDurationSeconds);
+            setCurrentStep('breathing');
+          }}
+        />
+      </Suspense>
 
       {/* Admin / Extension Research Metrics Drawer */}
       <Suspense fallback={null}>
