@@ -2,60 +2,39 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pause, Play, Volume2, VolumeX, CheckCircle2 } from 'lucide-react';
 import { BreathPhase } from '../types';
+import { BreathingSettings } from '../lib/settings';
 
 interface BreathingEngineProps {
   onComplete: (actualDurationSeconds: number) => void;
+  settings: BreathingSettings;
 }
 
-// Immutable 3:2:6 ratio per AGENTS.md
-const PHASES_CONFIG: Record<BreathPhase, {
-  label: string;
-  duration: number;
-  subtext: string;
-  color: string;
-  scale: number;
-}> = {
-  inhale: {
-    label: 'Inspire',
-    duration: 3,
-    subtext: 'Pelo nariz, suavemente',
-    color: '#7fae9b', // Sage green
-    scale: 1.22,
-  },
-  hold: {
-    label: 'Segure',
-    duration: 2,
-    subtext: 'Mantenha o ar com leveza',
-    color: '#e5d7b5', // Sand gold
-    scale: 1.22,
-  },
-  exhale: {
-    label: 'Expire',
-    duration: 6,
-    subtext: 'Longo pela boca',
-    color: '#5c937f', // Deep sage
-    scale: 0.85,
-  },
-};
-
-const TIMER_OPTIONS = [
-  { label: '1 min', seconds: 60 },
-  { label: '2 min', seconds: 120 },
-  { label: '3 min', seconds: 180 },
-];
-
-export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) => {
-  const [selectedDuration, setSelectedDuration] = useState<number>(120);
-  const [timeRemaining, setTimeRemaining] = useState<number>(120);
+export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, settings }) => {
+  const [selectedDuration, setSelectedDuration] = useState<number>(settings.totalDurationSeconds);
+  const [timeRemaining, setTimeRemaining] = useState<number>(settings.totalDurationSeconds);
   const [isActive, setIsActive] = useState<boolean>(true);
   const [phase, setPhase] = useState<BreathPhase>('inhale');
-  const [phaseSecondsLeft, setPhaseSecondsLeft] = useState<number>(3);
+  const [phaseSecondsLeft, setPhaseSecondsLeft] = useState<number>(settings.inhaleDuration);
   const [isAudioMuted, setIsAudioMuted] = useState<boolean>(false);
   const [totalElapsedTime, setTotalElapsedTime] = useState<number>(0);
 
-  // References to keep cycle in exact mathematical synchronization
+  // Sync state if settings prop changes
+  useEffect(() => {
+    setSelectedDuration(settings.totalDurationSeconds);
+    setTimeRemaining(settings.totalDurationSeconds);
+    setPhase('inhale');
+    setPhaseSecondsLeft(settings.inhaleDuration);
+    cycleTimeRef.current = 0;
+  }, [settings]);
+
+  // Audio Context for subtle calming acoustic tone
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const cycleTimeRef = useRef<number>(0); // 0 to 11 (3+2+6 = 11s)
+
+  // Cycle time tracking ref (from 0 to cycleLength - 1)
+  const cycleTimeRef = useRef<number>(0);
+
+  const { inhaleDuration, holdDuration, exhaleDuration } = settings;
+  const cycleLength = inhaleDuration + holdDuration + exhaleDuration;
 
   const playSoftTone = (freq: number) => {
     if (isAudioMuted) return;
@@ -84,14 +63,14 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) 
     }
   };
 
-  // Tone shift per phase trigger
+  // Trigger phase tone cue
   useEffect(() => {
     if (!isActive) return;
     const tones: Record<BreathPhase, number> = { inhale: 432, hold: 528, exhale: 360 };
     playSoftTone(tones[phase]);
   }, [phase, isActive, isAudioMuted]);
 
-  // Synchronized single interval clock
+  // Synchronized Master Clock
   useEffect(() => {
     if (!isActive || timeRemaining <= 0) return;
 
@@ -99,35 +78,30 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) 
       setTotalElapsedTime(prev => prev + 1);
 
       setTimeRemaining(prev => {
-        if (prev <= 1) {
-          return 0;
-        }
+        if (prev <= 1) return 0;
         return prev - 1;
       });
 
-      // Synchronize 11-second master breathing cycle:
-      // [0, 1, 2] = Inhale (3s) -> phaseSecondsLeft: 3, 2, 1
-      // [3, 4] = Hold (2s) -> phaseSecondsLeft: 2, 1
-      // [5, 6, 7, 8, 9, 10] = Exhale (6s) -> phaseSecondsLeft: 6, 5, 4, 3, 2, 1
-      cycleTimeRef.current = (cycleTimeRef.current + 1) % 11;
+      // Advance cycle time
+      cycleTimeRef.current = (cycleTimeRef.current + 1) % cycleLength;
       const c = cycleTimeRef.current;
 
-      if (c < 3) {
+      if (c < inhaleDuration) {
         setPhase('inhale');
-        setPhaseSecondsLeft(3 - c);
-      } else if (c < 5) {
+        setPhaseSecondsLeft(inhaleDuration - c);
+      } else if (holdDuration > 0 && c < inhaleDuration + holdDuration) {
         setPhase('hold');
-        setPhaseSecondsLeft(2 - (c - 3));
+        setPhaseSecondsLeft(holdDuration - (c - inhaleDuration));
       } else {
         setPhase('exhale');
-        setPhaseSecondsLeft(6 - (c - 5));
+        setPhaseSecondsLeft(exhaleDuration - (c - inhaleDuration - holdDuration));
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, timeRemaining]);
+  }, [isActive, timeRemaining, cycleLength, inhaleDuration, holdDuration, exhaleDuration]);
 
-  // Handle completion when timer reaches 0
+  // Completion effect
   useEffect(() => {
     if (timeRemaining === 0 && totalElapsedTime > 0) {
       onComplete(totalElapsedTime);
@@ -140,12 +114,42 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) 
     setTotalElapsedTime(0);
     cycleTimeRef.current = 0;
     setPhase('inhale');
-    setPhaseSecondsLeft(3);
+    setPhaseSecondsLeft(inhaleDuration);
   };
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   const progress = ((selectedDuration - timeRemaining) / selectedDuration) * 100;
-  const currentCfg = PHASES_CONFIG[phase];
+
+  // Phase metadata for colors and labels
+  const phaseMetadata = {
+    inhale: {
+      label: 'Inspire',
+      subtext: 'Pelo nariz, com calma',
+      color: '#7fae9b', // Sage green
+      targetScale: 1.28,
+      duration: inhaleDuration,
+    },
+    hold: {
+      label: 'Segure',
+      subtext: 'Pausa no ápice',
+      color: '#e5d7b5', // Sand gold
+      targetScale: 1.28, // Stays at maximum size during hold
+      duration: holdDuration,
+    },
+    exhale: {
+      label: 'Expire',
+      subtext: 'Solte devagar pela boca',
+      color: '#5c937f', // Deep sage
+      targetScale: 0.72, // Shrinks back to small size
+      duration: exhaleDuration,
+    },
+  }[phase];
+
+  // Quick preset options based on current settings
+  const timerOptions = Array.from(new Set([60, settings.totalDurationSeconds, 180, 300]))
+    .sort((a, b) => a - b)
+    .slice(0, 3)
+    .map(s => ({ label: `${Math.round(s / 60)} min`, seconds: s }));
 
   return (
     <motion.div
@@ -154,10 +158,10 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) 
       exit={{ opacity: 0 }}
       className="flex flex-col flex-1 justify-between py-2 select-none"
     >
-      {/* Top bar controls */}
+      {/* Top bar: minimal duration selector & sound toggle */}
       <div className="flex items-center justify-between px-1">
         <div className="inline-flex gap-1 p-1 rounded-full bg-petrol-900/70 border border-petrol-800/80">
-          {TIMER_OPTIONS.map(opt => (
+          {timerOptions.map(opt => (
             <button
               key={opt.seconds}
               onClick={() => handleSelectDuration(opt.seconds)}
@@ -181,58 +185,77 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) 
         </button>
       </div>
 
-      {/* Central Organic Breathing Orb */}
-      <div className="flex-1 flex flex-col items-center justify-center my-auto py-4">
+      {/* 
+        ─── Central Organic Breathing Orb ───
+        Behavior:
+        - Inhale: Ball starts small and expands to maximum size (0.72 -> 1.28) over inhaleDuration.
+        - Hold: At this maximum size (1.28), it stays still/paused for holdDuration.
+        - Exhale: Contracts from maximum size back to small size (1.28 -> 0.72) over exhaleDuration.
+      */}
+      <div className="flex-1 flex flex-col items-center justify-center my-auto py-2">
         <div className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
-          {/* Subtle natural aura */}
+          {/* Subtle Ambient Aura Expanding and Contracting with Breath */}
           <motion.div
+            initial={{ scale: 0.72 }}
             animate={{
-              scale: [1, currentCfg.scale * 1.12, 1],
-              opacity: [0.1, 0.28, 0.1],
+              scale: phase === 'exhale' ? 0.76 : 1.35,
+              opacity: phase === 'hold' ? 0.35 : phase === 'inhale' ? 0.28 : 0.12,
             }}
             transition={{
-              duration: currentCfg.duration,
-              ease: 'easeInOut',
-              repeat: Infinity,
+              duration: phaseMetadata.duration,
+              ease: [0.42, 0, 0.58, 1],
             }}
             className="absolute inset-0 rounded-full blur-3xl pointer-events-none transition-colors duration-700"
-            style={{ backgroundColor: currentCfg.color }}
+            style={{ backgroundColor: phaseMetadata.color }}
           />
 
-          {/* Calming Ripple Ring */}
+          {/* Faint Concentric Ring Following the Orb Scale */}
           <motion.div
+            initial={{ scale: 0.72 }}
             animate={{
-              scale: currentCfg.scale * 1.05,
-              opacity: phase === 'hold' ? 0.35 : 0.18,
+              scale: phase === 'exhale' ? 0.78 : 1.30,
+              opacity: phase === 'hold' ? 0.4 : 0.2,
             }}
             transition={{
-              duration: currentCfg.duration,
-              ease: 'easeInOut',
+              duration: phaseMetadata.duration,
+              ease: [0.42, 0, 0.58, 1],
             }}
-            className="absolute inset-4 rounded-full border pointer-events-none transition-all duration-700"
-            style={{ borderColor: currentCfg.color }}
+            className="absolute inset-3 rounded-full border pointer-events-none transition-all duration-700"
+            style={{ borderColor: phaseMetadata.color }}
           />
 
           {/* Main Breathing Circle */}
           <motion.div
-            animate={{ scale: currentCfg.scale }}
-            transition={{ duration: currentCfg.duration, ease: 'easeInOut' }}
-            className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-full border border-petrol-700/60 bg-petrol-950/90 backdrop-blur-md flex flex-col items-center justify-center transition-all duration-700 shadow-xl"
+            initial={{ scale: 0.72 }}
+            animate={{
+              scale: phaseMetadata.targetScale,
+            }}
+            transition={{
+              duration: phaseMetadata.duration,
+              ease: [0.42, 0, 0.58, 1],
+            }}
+            className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-full border border-petrol-700/60 bg-petrol-950/90 backdrop-blur-md flex flex-col items-center justify-center transition-colors duration-700 shadow-2xl"
           >
+            {/* Inner rim highlight */}
+            <div
+              className="absolute inset-1.5 rounded-full border opacity-25 pointer-events-none transition-colors duration-700"
+              style={{ borderColor: phaseMetadata.color }}
+            />
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={phase}
-                initial={{ opacity: 0, y: 2 }}
+                initial={{ opacity: 0, y: 3 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -2 }}
+                exit={{ opacity: 0, y: -3 }}
                 transition={{ duration: 0.25 }}
                 className="text-center px-4"
               >
                 <p
-                  className="text-sm font-semibold tracking-widest uppercase transition-colors duration-500 mb-1"
-                  style={{ color: currentCfg.color }}
+                  className="text-xs sm:text-sm font-semibold tracking-widest uppercase transition-colors duration-500 mb-1"
+                  style={{ color: phaseMetadata.color }}
                 >
-                  {currentCfg.label}
+                  {phaseMetadata.label}
                 </p>
 
                 <p className="text-5xl sm:text-6xl font-semibold text-sand-200 tabular-nums leading-none tracking-tight">
@@ -240,28 +263,38 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) 
                 </p>
 
                 <p className="text-[11px] text-slate-400 mt-2 font-normal">
-                  {currentCfg.subtext}
+                  {phaseMetadata.subtext}
                 </p>
               </motion.div>
             </AnimatePresence>
           </motion.div>
         </div>
-
-        <p className="mt-4 text-xs text-slate-400 tabular-nums font-medium">
-          {formatTime(timeRemaining)} restantes
-        </p>
       </div>
 
-      {/* Bottom controls */}
-      <div className="space-y-3 px-1">
-        <div className="w-full h-1 bg-petrol-900 rounded-full overflow-hidden">
+      {/* 
+        ─── Bottom Controls: Progress & Time Remaining Placed Together ───
+      */}
+      <div className="space-y-2.5 px-1">
+        {/* Time Remaining right next to the progress bar */}
+        <div className="flex items-center justify-between text-xs text-slate-400 font-medium px-0.5">
+          <span className="text-[11px] text-slate-400 font-mono">
+            {settings.inhaleDuration}s : {settings.holdDuration}s : {settings.exhaleDuration}s
+          </span>
+          <span className="tabular-nums text-sand-200 font-medium">
+            {formatTime(timeRemaining)} restantes
+          </span>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full h-1.5 bg-petrol-900 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-1000 ease-linear"
-            style={{ width: `${progress}%`, backgroundColor: currentCfg.color }}
+            style={{ width: `${progress}%`, backgroundColor: phaseMetadata.color }}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-2.5 pt-1">
           <button
             onClick={() => setIsActive(!isActive)}
             className="py-3 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-200 text-xs font-medium flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"

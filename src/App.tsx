@@ -10,6 +10,7 @@ import { StepPostCheckout } from './components/StepPostCheckout';
 import { StepSummary } from './components/StepSummary';
 import { Step } from './types';
 import { getAnonymousUserId, saveSession, isSupabaseConfigured, checkSupabaseConnection } from './lib/supabase';
+import { getBreathingSettings, saveBreathingSettings, BreathingSettings } from './lib/settings';
 
 const AdminDrawer = lazy(() => import('./components/AdminDrawer'));
 
@@ -17,7 +18,8 @@ export function App() {
   const [currentStep, setCurrentStep] = useState<Step>('onboarding');
   const [preTension, setPreTension] = useState<number>(4);
   const [postTension, setPostTension] = useState<number>(2);
-  const [sessionDuration, setSessionDuration] = useState<number>(120);
+  const [breathingSettings, setBreathingSettings] = useState<BreathingSettings>(getBreathingSettings);
+  const [sessionDuration, setSessionDuration] = useState<number>(() => getBreathingSettings().totalDurationSeconds);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [isOffline, setIsOffline] = useState<boolean>(!isSupabaseConfigured);
 
@@ -27,6 +29,12 @@ export function App() {
       setIsOffline(!online);
     });
   }, []);
+
+  const handleUpdateSettings = (newSettings: BreathingSettings) => {
+    setBreathingSettings(newSettings);
+    setSessionDuration(newSettings.totalDurationSeconds);
+    saveBreathingSettings(newSettings);
+  };
 
   const handleFinishBreathing = (actualDuration: number) => {
     setSessionDuration(actualDuration);
@@ -48,7 +56,7 @@ export function App() {
 
   // Restart goes directly to the breathing exercise per specification
   const handleRestart = () => {
-    setSessionDuration(120);
+    setSessionDuration(breathingSettings.totalDurationSeconds);
     setCurrentStep('breathing');
   };
 
@@ -62,7 +70,7 @@ export function App() {
       case 'compassion':
         return { current: 2, total: 4, label: 'Acolhimento' };
       case 'breathing':
-        return { current: 3, total: 4, label: 'Exercício 3:2:6' };
+        return { current: 3, total: 4, label: `Respiração ${breathingSettings.inhaleDuration}:${breathingSettings.holdDuration}:${breathingSettings.exhaleDuration}` };
       case 'post-checkout':
         return { current: 4, total: 4, label: 'Reavaliação' };
       case 'summary':
@@ -104,6 +112,8 @@ export function App() {
             <StepCompassion
               key="compassion"
               preTension={preTension}
+              settings={breathingSettings}
+              onUpdateSettings={handleUpdateSettings}
               onNext={() => setCurrentStep('breathing')}
               onBack={() => setCurrentStep('pre-checkin')}
             />
@@ -112,6 +122,7 @@ export function App() {
           {currentStep === 'breathing' && (
             <BreathingEngine
               key="breathing"
+              settings={breathingSettings}
               onComplete={handleFinishBreathing}
             />
           )}
