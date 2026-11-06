@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pause, Play, Volume2, VolumeX, CheckCircle2 } from 'lucide-react';
 import { BreathPhase } from '../types';
-import { BreathingSettings } from '../lib/settings';
+import { BreathingSettings, formatPatternDisplay } from '../lib/settings';
 
 interface BreathingEngineProps {
   onComplete: (actualDurationSeconds: number) => void;
@@ -33,8 +33,8 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
   // Cycle time tracking ref (from 0 to cycleLength - 1)
   const cycleTimeRef = useRef<number>(0);
 
-  const { inhaleDuration, holdDuration, exhaleDuration } = settings;
-  const cycleLength = inhaleDuration + holdDuration + exhaleDuration;
+  const { inhaleDuration, holdDuration, exhaleDuration, holdPostExhaleDuration } = settings;
+  const cycleLength = inhaleDuration + holdDuration + exhaleDuration + holdPostExhaleDuration;
 
   const playSoftTone = (freq: number) => {
     if (isAudioMuted) return;
@@ -66,7 +66,12 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
   // Trigger phase tone cue
   useEffect(() => {
     if (!isActive) return;
-    const tones: Record<BreathPhase, number> = { inhale: 432, hold: 528, exhale: 360 };
+    const tones: Record<BreathPhase, number> = { 
+      inhale: 432, 
+      hold: 528, 
+      exhale: 360,
+      hold_post_exhale: 396 
+    };
     playSoftTone(tones[phase]);
   }, [phase, isActive, isAudioMuted]);
 
@@ -86,20 +91,27 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
       cycleTimeRef.current = (cycleTimeRef.current + 1) % cycleLength;
       const c = cycleTimeRef.current;
 
-      if (c < inhaleDuration) {
+      const tInhaleEnd = inhaleDuration;
+      const tHoldEnd = tInhaleEnd + holdDuration;
+      const tExhaleEnd = tHoldEnd + exhaleDuration;
+
+      if (c < tInhaleEnd) {
         setPhase('inhale');
-        setPhaseSecondsLeft(inhaleDuration - c);
-      } else if (holdDuration > 0 && c < inhaleDuration + holdDuration) {
+        setPhaseSecondsLeft(tInhaleEnd - c);
+      } else if (holdDuration > 0 && c < tHoldEnd) {
         setPhase('hold');
-        setPhaseSecondsLeft(holdDuration - (c - inhaleDuration));
-      } else {
+        setPhaseSecondsLeft(tHoldEnd - c);
+      } else if (c < tExhaleEnd) {
         setPhase('exhale');
-        setPhaseSecondsLeft(exhaleDuration - (c - inhaleDuration - holdDuration));
+        setPhaseSecondsLeft(tExhaleEnd - c);
+      } else {
+        setPhase('hold_post_exhale');
+        setPhaseSecondsLeft(cycleLength - c);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, timeRemaining, cycleLength, inhaleDuration, holdDuration, exhaleDuration]);
+  }, [isActive, timeRemaining, cycleLength, inhaleDuration, holdDuration, exhaleDuration, holdPostExhaleDuration]);
 
   // Completion effect
   useEffect(() => {
@@ -131,7 +143,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
     },
     hold: {
       label: 'Segure',
-      subtext: 'Pausa no ápice',
+      subtext: 'Pausa no ápice (pulmões cheios)',
       color: '#e5d7b5', // Sand gold
       targetScale: 1.28, // Stays at maximum size during hold
       duration: holdDuration,
@@ -142,6 +154,13 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
       color: '#5c937f', // Deep sage
       targetScale: 0.72, // Shrinks back to small size
       duration: exhaleDuration,
+    },
+    hold_post_exhale: {
+      label: 'Pausa',
+      subtext: 'Silêncio interno (pulmões vazios)',
+      color: '#8fa89b', // Neutral soft sage
+      targetScale: 0.72, // Stays at small size during post-exhale pause
+      duration: holdPostExhaleDuration,
     },
   }[phase];
 
@@ -160,14 +179,18 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
     >
       {/* Top bar: minimal duration selector & sound toggle */}
       <div className="flex items-center justify-between px-1">
-        <div className="inline-flex gap-1 p-1 rounded-full bg-petrol-900/70 border border-petrol-800/80">
+        <div 
+          className="inline-flex gap-1.5 p-1 rounded-full bg-petrol-900/70 border border-petrol-800/80"
+          title="Selecione o tempo total desta sessão"
+        >
           {timerOptions.map(opt => (
             <button
               key={opt.seconds}
               onClick={() => handleSelectDuration(opt.seconds)}
-              className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all duration-300 ${
+              title={`Definir sessão de ${opt.label}`}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
                 selectedDuration === opt.seconds
-                  ? 'bg-petrol-800 text-sand-200'
+                  ? 'bg-petrol-800 text-sand-200 shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -179,7 +202,8 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
         <button
           onClick={() => setIsAudioMuted(!isAudioMuted)}
           aria-label={isAudioMuted ? 'Ativar som' : 'Desativar som'}
-          className="p-2 rounded-full text-slate-400 hover:text-sand-200 bg-petrol-900/60 border border-petrol-800/60 transition-colors"
+          title={isAudioMuted ? 'Ativar sinal sonoro suave nas trocas de fase' : 'Desativar sinal sonoro'}
+          className="p-2.5 rounded-full text-slate-400 hover:text-sand-200 bg-petrol-900/60 border border-petrol-800/60 transition-colors"
         >
           {isAudioMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-sage-300" />}
         </button>
@@ -252,17 +276,21 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
                 className="text-center px-4"
               >
                 <p
-                  className="text-xs sm:text-sm font-semibold tracking-widest uppercase transition-colors duration-500 mb-1"
+                  className="text-sm sm:text-base font-bold tracking-widest uppercase transition-colors duration-500 mb-1"
                   style={{ color: phaseMetadata.color }}
+                  title="Fase atual da respiração"
                 >
                   {phaseMetadata.label}
                 </p>
 
-                <p className="text-5xl sm:text-6xl font-semibold text-sand-200 tabular-nums leading-none tracking-tight">
+                <p 
+                  className="text-6xl sm:text-7xl font-bold text-sand-200 tabular-nums leading-none tracking-tight my-1"
+                  title="Segundos restantes nesta fase"
+                >
                   {phaseSecondsLeft}
                 </p>
 
-                <p className="text-[11px] text-slate-400 mt-2 font-normal">
+                <p className="text-xs text-slate-300 mt-2 font-medium">
                   {phaseMetadata.subtext}
                 </p>
               </motion.div>
@@ -274,19 +302,28 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
       {/* 
         ─── Bottom Controls: Progress & Time Remaining Placed Together ───
       */}
-      <div className="space-y-2.5 px-1">
+      <div className="space-y-3 px-1">
         {/* Time Remaining right next to the progress bar */}
-        <div className="flex items-center justify-between text-xs text-slate-400 font-medium px-0.5">
-          <span className="text-[11px] text-slate-400 font-mono">
-            {settings.inhaleDuration}s : {settings.holdDuration}s : {settings.exhaleDuration}s
+        <div className="flex items-center justify-between text-xs sm:text-sm text-slate-300 font-medium px-0.5">
+          <span 
+            className="text-xs text-slate-300 font-mono bg-petrol-900/80 px-2 py-0.5 rounded-md border border-petrol-800"
+            title="Ritmo da sessão (Inspiração : Retenção : Expiração : Pausa final)"
+          >
+            {formatPatternDisplay(settings)}
           </span>
-          <span className="tabular-nums text-sand-200 font-medium">
+          <span 
+            className="tabular-nums text-sand-200 font-semibold"
+            title="Tempo restante da prática"
+          >
             {formatTime(timeRemaining)} restantes
           </span>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full h-1.5 bg-petrol-900 rounded-full overflow-hidden">
+        <div 
+          className="w-full h-2 bg-petrol-900 rounded-full overflow-hidden"
+          title={`Progresso da sessão: ${Math.round(progress)}%`}
+        >
           <div
             className="h-full rounded-full transition-all duration-1000 ease-linear"
             style={{ width: `${progress}%`, backgroundColor: phaseMetadata.color }}
@@ -294,10 +331,11 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-2.5 pt-1">
+        <div className="grid grid-cols-2 gap-3 pt-1">
           <button
             onClick={() => setIsActive(!isActive)}
-            className="py-3 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-200 text-xs font-medium flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
+            title={isActive ? 'Pausar o exercício temporariamente' : 'Retomar o exercício'}
+            className="py-3.5 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-200 text-sm font-semibold flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
           >
             {isActive ? (
               <>
@@ -314,7 +352,8 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
 
           <button
             onClick={() => onComplete(Math.max(totalElapsedTime, 10))}
-            className="py-3 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-200 text-xs font-medium flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
+            title="Finalizar o exercício agora e ir para a reavaliação"
+            className="py-3.5 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-200 text-sm font-semibold flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
           >
             <CheckCircle2 className="w-4 h-4 text-sage-300" />
             <span>Concluir</span>

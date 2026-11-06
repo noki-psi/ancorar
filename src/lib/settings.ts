@@ -3,6 +3,7 @@ export interface BreathingSettings {
   inhaleDuration: number;
   holdDuration: number;
   exhaleDuration: number;
+  holdPostExhaleDuration: number;
 }
 
 export const DEFAULT_BREATHING_SETTINGS: BreathingSettings = {
@@ -10,9 +11,30 @@ export const DEFAULT_BREATHING_SETTINGS: BreathingSettings = {
   inhaleDuration: 3,         // 3 seconds
   holdDuration: 2,           // 2 seconds
   exhaleDuration: 6,         // 6 seconds
+  holdPostExhaleDuration: 0, // 0 seconds (default 3:2:6, optionally + hold pós-exalação)
 };
 
 const SETTINGS_KEY = 'ancorar_breathing_settings';
+
+export function getPatternRaw(settings: BreathingSettings): string {
+  if (settings.holdPostExhaleDuration > 0) {
+    return `${settings.inhaleDuration}${settings.holdDuration}${settings.exhaleDuration}${settings.holdPostExhaleDuration}`;
+  }
+  return `${settings.inhaleDuration}${settings.holdDuration}${settings.exhaleDuration}`;
+}
+
+export function formatPatternDisplay(patternOrSettings: string | BreathingSettings): string {
+  if (typeof patternOrSettings === 'object') {
+    if (patternOrSettings.holdPostExhaleDuration > 0) {
+      return `${patternOrSettings.inhaleDuration}:${patternOrSettings.holdDuration}:${patternOrSettings.exhaleDuration}:${patternOrSettings.holdPostExhaleDuration}`;
+    }
+    return `${patternOrSettings.inhaleDuration}:${patternOrSettings.holdDuration}:${patternOrSettings.exhaleDuration}`;
+  }
+
+  const clean = patternOrSettings.replace(/[^0-9]/g, '');
+  if (!clean) return '3:2:6';
+  return clean.split('').join(':');
+}
 
 export function getBreathingSettings(): BreathingSettings {
   try {
@@ -24,6 +46,7 @@ export function getBreathingSettings(): BreathingSettings {
       inhaleDuration: Math.max(2, Math.min(8, Number(parsed.inhaleDuration) || 3)),
       holdDuration: Math.max(0, Math.min(6, typeof parsed.holdDuration === 'number' ? parsed.holdDuration : 2)),
       exhaleDuration: Math.max(3, Math.min(12, Number(parsed.exhaleDuration) || 6)),
+      holdPostExhaleDuration: Math.max(0, Math.min(6, typeof parsed.holdPostExhaleDuration === 'number' ? parsed.holdPostExhaleDuration : 0)),
     };
   } catch {
     return DEFAULT_BREATHING_SETTINGS;

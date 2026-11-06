@@ -11,8 +11,14 @@ create table if not exists public.sessions (
   post_tension integer not null check (post_tension between 1 and 5),
   tension_delta integer generated always as (pre_tension - post_tension) stored,
   duration_seconds integer default 120,
+  breathing_pattern text default '326',
+  target_duration_seconds integer default 120,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Migração segura para adicionar colunas em instâncias já existentes
+alter table public.sessions add column if not exists breathing_pattern text default '326';
+alter table public.sessions add column if not exists target_duration_seconds integer default 120;
 
 -- 2. Habilitação de RLS (Row Level Security)
 alter table public.sessions enable row level security;

@@ -4,6 +4,7 @@ import { X, RefreshCw, Database, FileSpreadsheet, ShieldAlert } from 'lucide-rea
 import { SessionRecord } from '../types';
 import { fetchAllSessions, isSupabaseConfigured } from '../lib/supabase';
 import { getTensionEmoji } from '../lib/constants';
+import { formatPatternDisplay } from '../lib/settings';
 
 interface AdminDrawerProps {
   isOpen: boolean;
@@ -52,7 +53,7 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
       return;
     }
 
-    const headers = ['ID_Sessao', 'ID_Usuario_Anonimo', 'Pre_Tensao_1a5', 'Post_Tensao_1a5', 'Delta_Reducao', 'Duracao_Segundos', 'Data_Hora_UTC'];
+    const headers = ['ID_Sessao', 'ID_Usuario_Anonimo', 'Pre_Tensao_1a5', 'Post_Tensao_1a5', 'Delta_Reducao', 'Duracao_Segundos', 'Tempo_Estimado_Segundos', 'Padrao_Respiratorio', 'Data_Hora_UTC'];
     const rows = sessions.map(s => [
       s.id || 'N/A',
       s.anonymous_user_id,
@@ -60,6 +61,8 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
       s.post_tension,
       s.pre_tension - s.post_tension,
       s.duration_seconds,
+      s.target_duration_seconds || 120,
+      s.breathing_pattern ? formatPatternDisplay(s.breathing_pattern) : '3:2:6',
       s.created_at || new Date().toISOString()
     ]);
 
@@ -67,7 +70,7 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `ancorar_relatorio_unirn_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `ancorar_relatorio_pesquisa_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -97,25 +100,30 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
             {/* Header */}
             <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Database className="w-4 h-4 text-cyan-400" />
-                  <span>Painel do Projeto de Extensão (UNI-RN)</span>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Database className="w-5 h-5 text-cyan-400" />
+                  <span>Painel do Projeto de Extensão</span>
                 </h3>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Orientação: Profa. Ms. Marianna Lucena • Curso de Psicologia
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Métricas anônimas agregadas e relatório de impacto
                 </p>
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+                title="Fechar painel da pesquisa"
+                className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Connection Status Notice */}
-            <div className="px-4 py-2 border-b border-slate-900 bg-slate-900/40 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
+            <div className="px-4 py-2.5 border-b border-slate-900 bg-slate-900/40 flex items-center justify-between text-xs sm:text-sm">
+              <div 
+                className="flex items-center gap-2"
+                title={isOfflineMode ? "Operando com dados salvos no navegador" : "Sincronizado em tempo real com o banco Supabase"}
+              >
+                <Database className="w-4 h-4 text-cyan-400" />
                 <span className={`w-2 h-2 rounded-full ${isOfflineMode ? 'bg-amber-400' : 'bg-emerald-400 animate-pulse'}`} />
                 <span className="text-slate-300 font-medium">
                   {isOfflineMode 
@@ -126,9 +134,10 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
               <button
                 onClick={loadData}
                 disabled={isLoading}
-                className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-semibold"
+                title="Recarregar dados do banco de dados"
+                className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-semibold text-xs sm:text-sm"
               >
-                <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 <span>Atualizar</span>
               </button>
             </div>
@@ -137,19 +146,28 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
             <div className="p-4 overflow-y-auto space-y-4 flex-1">
               {/* Aggregated Metrics Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-center">
-                  <div className="text-[10px] uppercase font-bold text-slate-400">Total Sessões</div>
-                  <div className="text-2xl font-black text-cyan-300 mt-1">{totalSessions}</div>
+                <div 
+                  className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-center"
+                  title="Quantidade total de sessões registradas"
+                >
+                  <div className="text-xs uppercase font-bold text-slate-400">Total Sessões</div>
+                  <div className="text-2xl sm:text-3xl font-black text-cyan-300 mt-1">{totalSessions}</div>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-center">
-                  <div className="text-[10px] uppercase font-bold text-slate-400">Usuários Únicos</div>
-                  <div className="text-2xl font-black text-emerald-300 mt-1">{uniqueUsers}</div>
+                <div 
+                  className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-center"
+                  title="Número de identificadores anônimos distintos"
+                >
+                  <div className="text-xs uppercase font-bold text-slate-400">Usuários Únicos</div>
+                  <div className="text-2xl sm:text-3xl font-black text-emerald-300 mt-1">{uniqueUsers}</div>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-center">
-                  <div className="text-[10px] uppercase font-bold text-slate-400">Pré vs Pós Médio</div>
-                  <div className="text-sm font-bold text-slate-200 mt-1.5 flex items-center justify-center gap-1.5">
+                <div 
+                  className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-center"
+                  title="Média das notas de tensão antes e depois do exercício (escala 1 a 5)"
+                >
+                  <div className="text-xs uppercase font-bold text-slate-400">Pré vs Pós Médio</div>
+                  <div className="text-base font-bold text-slate-200 mt-1.5 flex items-center justify-center gap-1.5">
                     <span>{getTensionEmoji(Number(avgPreTension))}</span>
                     <span className="text-rose-400">{avgPreTension}</span>
                     <span className="text-slate-500">→</span>
@@ -158,29 +176,33 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 text-center">
-                  <div className="text-[10px] uppercase font-bold text-slate-400">% com Redução</div>
-                  <div className="text-2xl font-black text-teal-300 mt-1">{reductionPercentage}%</div>
+                <div 
+                  className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-center"
+                  title="Percentual de sessões em que o nível pós foi estritamente menor que o pré"
+                >
+                  <div className="text-xs uppercase font-bold text-slate-400">% com Redução</div>
+                  <div className="text-2xl sm:text-3xl font-black text-teal-300 mt-1">{reductionPercentage}%</div>
                 </div>
               </div>
 
               {/* Action: Export CSV */}
               <button
                 onClick={exportCSV}
-                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-transform"
+                title="Baixar planilha CSV com todos os dados brutos anônimos"
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-transform"
               >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>Exportar CSV para Relatório UNI-RN</span>
+                <FileSpreadsheet className="w-5 h-5" />
+                <span>Exportar CSV de Pesquisa</span>
               </button>
 
               {/* Setup Helper if Supabase not configured */}
               {!isSupabaseConfigured && (
-                <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-200 text-xs space-y-1">
+                <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-200 text-xs sm:text-sm space-y-1">
                   <div className="flex items-center gap-1.5 font-bold">
-                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                    <ShieldAlert className="w-4 h-4 text-amber-400" />
                     <span>Sincronização em nuvem da pesquisa:</span>
                   </div>
-                  <p className="text-[11px] text-amber-300/90">
+                  <p className="text-xs text-amber-300/90 leading-relaxed">
                     Defina <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-100">VITE_SUPABASE_URL</code> e <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-100">VITE_SUPABASE_ANON_KEY</code> no seu arquivo <code>.env</code> para sincronizar os dados com a base da pesquisa.
                   </p>
                 </div>
@@ -188,34 +210,40 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
 
               {/* Recent Sessions List */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400">
                   Últimos Registros Anônimos ({sessions.length})
                 </h4>
 
                 {sessions.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-slate-400 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800">
+                  <div className="p-8 text-center text-sm text-slate-400 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800">
                     Nenhuma sessão realizada ainda neste dispositivo ou banco.
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                     {sessions.slice(0, 15).map((s, idx) => {
                       const delta = s.pre_tension - s.post_tension;
+                      const pattern = s.breathing_pattern ? formatPatternDisplay(s.breathing_pattern) : '3:2:6';
+                      const targetDur = s.target_duration_seconds || 120;
                       return (
                         <div
                           key={s.id || idx}
-                          className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-xs"
+                          title={`Sessão: ${s.duration_seconds}s praticados de ${targetDur}s previstos • Ritmo ${pattern}`}
+                          className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-xs sm:text-sm"
                         >
-                          <div className="space-y-0.5">
-                            <div className="font-mono text-[10px] text-slate-400">
-                              {s.anonymous_user_id.slice(0, 12)}...
+                          <div className="space-y-1">
+                            <div className="font-mono text-xs text-slate-400 flex items-center gap-2">
+                              <span>{s.anonymous_user_id.slice(0, 12)}...</span>
+                              <span className="font-sans text-[11px] bg-slate-800 text-slate-300 px-1.5 py-0.2 rounded font-mono">
+                                {pattern}
+                              </span>
                             </div>
-                            <div className="text-[11px] text-slate-300 flex items-center gap-2">
+                            <div className="text-xs sm:text-sm text-slate-300 flex items-center gap-2">
                               <span>
                                 {getTensionEmoji(s.pre_tension)} <strong>{s.pre_tension}</strong>
                                 <span className="mx-1 text-slate-500">→</span>
                                 {getTensionEmoji(s.post_tension)} <strong>{s.post_tension}</strong>
                               </span>
-                              <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                                 delta > 0 ? 'bg-emerald-500/20 text-emerald-300' : delta === 0 ? 'bg-slate-800 text-slate-400' : 'bg-rose-500/20 text-rose-300'
                               }`}>
                                 {delta > 0 ? `-${delta}` : delta === 0 ? '0' : `+${Math.abs(delta)}`}
@@ -223,9 +251,11 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
                             </div>
                           </div>
 
-                          <div className="text-right text-[10px] text-slate-400">
-                            <div>{s.duration_seconds}s de prática</div>
-                            <div className="text-[9px] text-slate-400 mt-0.5">
+                          <div className="text-right text-xs text-slate-300">
+                            <div>
+                              <strong className="text-cyan-300">{s.duration_seconds}s</strong>/{targetDur}s de prática
+                            </div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">
                               {s.created_at ? new Date(s.created_at).toLocaleTimeString() : 'Agora'}
                             </div>
                           </div>

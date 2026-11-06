@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, ArrowRight, SlidersHorizontal } from 'lucide-react';
-import { BreathingSettings } from '../lib/settings';
+import { BreathingSettings, formatPatternDisplay } from '../lib/settings';
 import { BreathingSettingsModal } from './BreathingSettingsModal';
 
 interface StepCompassionProps {
@@ -22,7 +22,7 @@ export const StepCompassion: React.FC<StepCompassionProps> = ({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const durationMin = Math.round(settings.totalDurationSeconds / 60);
-  const ratioLabel = `${settings.inhaleDuration}:${settings.holdDuration}:${settings.exhaleDuration}`;
+  const ratioLabel = formatPatternDisplay(settings);
 
   return (
     <motion.div 
@@ -33,47 +33,58 @@ export const StepCompassion: React.FC<StepCompassionProps> = ({
       className="flex flex-col flex-1 justify-center space-y-5 py-6"
     >
       <div className="flex justify-center">
-        <div className="w-12 h-12 rounded-2xl bg-petrol-800/80 border border-petrol-700/60 flex items-center justify-center">
-          <ShieldCheck className="w-6 h-6 text-sage-300" />
+        <div 
+          className="w-14 h-14 rounded-2xl bg-petrol-800/80 border border-petrol-700/60 flex items-center justify-center shadow-md"
+          title="Espaço seguro e acolhedor para descompressão"
+        >
+          <ShieldCheck className="w-7 h-7 text-sage-300" />
         </div>
       </div>
 
-      <div className="p-5 rounded-2xl bg-petrol-900/60 border border-petrol-800/80 relative space-y-3">
-        <p className="text-base sm:text-lg text-sand-200 font-medium leading-relaxed text-center italic">
+      <div className="p-5 sm:p-6 rounded-3xl bg-petrol-900/60 border border-petrol-800/80 relative space-y-3.5 shadow-sm">
+        <p className="text-lg sm:text-xl text-sand-200 font-medium leading-relaxed text-center italic">
           "O que você sente agora não é seu inimigo. É apenas o seu corpo tentando cuidar de você."
         </p>
-        <p className="text-xs sm:text-sm text-slate-300 text-center not-italic leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-300 text-center not-italic leading-relaxed">
           Vamos respirar juntos, sinalizando segurança e estabilidade para o seu sistema.
         </p>
 
-        <div className="pt-3 border-t border-petrol-800/80 flex items-center justify-between text-xs text-slate-400">
+        <div className="pt-3 border-t border-petrol-800/80 flex items-center justify-between text-xs sm:text-sm text-slate-400">
           <span>Tensão autoavaliada</span>
-          <span className="font-medium text-sand-300">Nível {preTension} de 5</span>
+          <span 
+            className="font-semibold text-sand-300 bg-petrol-950 px-2.5 py-0.5 rounded-full border border-petrol-800"
+            title="Autoavaliação informada na etapa anterior"
+          >
+            Nível {preTension} de 5
+          </span>
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <button
           onClick={onNext}
-          className="w-full py-3.5 px-6 rounded-2xl bg-sage-400 hover:bg-sage-300 text-petrol-950 font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm"
+          title="Avançar diretamente para a tela de respiração guiada"
+          className="w-full py-4 px-6 rounded-2xl bg-sage-400 hover:bg-sage-300 text-petrol-950 font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
         >
           <span>Iniciar exercício respiratório</span>
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="w-5 h-5" />
         </button>
 
         {/* Discreet Settings Trigger Button */}
         <button
           type="button"
           onClick={() => setIsSettingsOpen(true)}
-          className="w-full py-2.5 px-3 rounded-xl bg-petrol-900/40 hover:bg-petrol-900/80 text-slate-400 hover:text-sand-200 text-xs font-normal flex items-center justify-center gap-1.5 border border-petrol-800/50 transition-colors"
+          title="Ajustar tempo total e segundos de cada fase respiratória"
+          className="w-full py-3 px-3 rounded-xl bg-petrol-900/60 hover:bg-petrol-900/90 text-slate-300 hover:text-sand-200 text-xs sm:text-sm font-medium flex items-center justify-center gap-2 border border-petrol-800/70 transition-colors"
         >
-          <SlidersHorizontal className="w-3.5 h-3.5 text-sage-400" />
+          <SlidersHorizontal className="w-4 h-4 text-sage-400" />
           <span>Personalizar tempo ({durationMin} min • ritmo {ratioLabel})</span>
         </button>
 
         <button
           onClick={onBack}
-          className="w-full py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors font-medium"
+          title="Voltar à tela de autoavaliação"
+          className="w-full py-2 text-xs sm:text-sm text-slate-400 hover:text-slate-200 transition-colors font-medium text-center"
         >
           ← Ajustar autoavaliação
         </button>

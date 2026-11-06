@@ -86,11 +86,27 @@ export async function saveSession(data: Omit<SessionRecord, 'id' | 'created_at' 
         anonymous_user_id: data.anonymous_user_id,
         pre_tension: data.pre_tension,
         post_tension: data.post_tension,
-        duration_seconds: data.duration_seconds
+        duration_seconds: data.duration_seconds,
+        breathing_pattern: data.breathing_pattern || '326',
+        target_duration_seconds: data.target_duration_seconds || 120
       }
     ]);
 
     if (error) {
+      // If error might be due to missing columns in remote database, fallback to inserting core columns
+      if (error.message?.includes('breathing_pattern') || error.message?.includes('target_duration_seconds')) {
+        const fallbackRes = await supabase.from('sessions').insert([
+          {
+            anonymous_user_id: data.anonymous_user_id,
+            pre_tension: data.pre_tension,
+            post_tension: data.post_tension,
+            duration_seconds: data.duration_seconds
+          }
+        ]);
+        if (!fallbackRes.error) {
+          return { success: true, isOffline: false };
+        }
+      }
       console.warn('Supabase sync error, stored locally:', error.message);
       return { success: true, isOffline: true, error: error.message };
     }

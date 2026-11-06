@@ -10,7 +10,7 @@ import { StepPostCheckout } from './components/StepPostCheckout';
 import { StepSummary } from './components/StepSummary';
 import { Step } from './types';
 import { getAnonymousUserId, saveSession, isSupabaseConfigured, checkSupabaseConnection } from './lib/supabase';
-import { getBreathingSettings, saveBreathingSettings, BreathingSettings } from './lib/settings';
+import { getBreathingSettings, saveBreathingSettings, BreathingSettings, getPatternRaw, formatPatternDisplay } from './lib/settings';
 
 const AdminDrawer = lazy(() => import('./components/AdminDrawer'));
 
@@ -43,11 +43,14 @@ export function App() {
 
   const handleCompleteSession = async () => {
     const userId = getAnonymousUserId();
+    const patternRaw = getPatternRaw(breathingSettings);
     const result = await saveSession({
       anonymous_user_id: userId,
       pre_tension: preTension,
       post_tension: postTension,
       duration_seconds: sessionDuration,
+      target_duration_seconds: breathingSettings.totalDurationSeconds,
+      breathing_pattern: patternRaw,
     });
 
     setIsOffline(result.isOffline);
@@ -70,7 +73,7 @@ export function App() {
       case 'compassion':
         return { current: 2, total: 4, label: 'Acolhimento' };
       case 'breathing':
-        return { current: 3, total: 4, label: `Respiração ${breathingSettings.inhaleDuration}:${breathingSettings.holdDuration}:${breathingSettings.exhaleDuration}` };
+        return { current: 3, total: 4, label: `Respiração ${formatPatternDisplay(breathingSettings)}` };
       case 'post-checkout':
         return { current: 4, total: 4, label: 'Reavaliação' };
       case 'summary':
@@ -142,6 +145,8 @@ export function App() {
               preTension={preTension}
               postTension={postTension}
               durationSeconds={sessionDuration}
+              targetDurationSeconds={breathingSettings.totalDurationSeconds}
+              breathingPattern={getPatternRaw(breathingSettings)}
               isOffline={isOffline}
               onRestart={handleRestart}
             />

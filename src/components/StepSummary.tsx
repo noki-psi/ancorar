@@ -1,13 +1,16 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, TrendingDown, ExternalLink, RotateCcw, Award, Cloud, CloudOff } from 'lucide-react';
+import { Sparkles, TrendingDown, ExternalLink, RotateCcw, Award, Database } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { TENSION_LEVELS, getTensionEmoji } from '../lib/constants';
+import { formatPatternDisplay } from '../lib/settings';
 
 interface StepSummaryProps {
   preTension: number;
   postTension: number;
   durationSeconds: number;
+  targetDurationSeconds?: number;
+  breathingPattern?: string;
   isOffline: boolean;
   onRestart: () => void;
 }
@@ -16,6 +19,8 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   preTension,
   postTension,
   durationSeconds,
+  targetDurationSeconds = 120,
+  breathingPattern = '326',
   isOffline,
   onRestart,
 }) => {
@@ -78,72 +83,84 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
       className="flex flex-col flex-1 justify-center space-y-4 py-3"
     >
       {/* Research Sync Badge */}
-      <div className="flex items-center justify-between text-[11px] px-3.5 py-2 rounded-xl bg-petrol-900/60 border border-petrol-800/80">
-        <span className="text-slate-400">Dados da pesquisa:</span>
-        <span className={`inline-flex items-center gap-1.5 font-medium ${isOffline ? 'text-sand-300' : 'text-sage-300'}`}>
-          {isOffline ? <CloudOff className="w-3.5 h-3.5" /> : <Cloud className="w-3.5 h-3.5" />}
-          {isOffline ? 'Salvo no aparelho (offline)' : 'Enviado à pesquisa UNI-RN (anônimo)'}
+      <div 
+        className="flex items-center justify-between text-xs sm:text-sm px-4 py-2.5 rounded-xl bg-petrol-900/60 border border-petrol-800/80"
+        title={isOffline ? "Dados armazenados localmente no seu navegador para privacidade" : "Dados salvos de forma 100% anônima na base de pesquisa"}
+      >
+        <span className="text-slate-300 font-medium">Dados da pesquisa:</span>
+        <span className={`inline-flex items-center gap-1.5 font-semibold ${isOffline ? 'text-sand-300' : 'text-sage-300'}`}>
+          <Database className="w-4 h-4" />
+          {isOffline ? 'Salvo no aparelho (offline)' : 'Enviado'}
         </span>
       </div>
 
       {/* Main Impact Card */}
-      <div className="p-5 rounded-3xl bg-petrol-900/70 border border-petrol-800/90 space-y-3.5 text-center relative overflow-hidden shadow-lg">
-        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${feedback.badgeColor}`}>
+      <div className="p-5 sm:p-6 rounded-3xl bg-petrol-900/70 border border-petrol-800/90 space-y-4 text-center relative overflow-hidden shadow-lg">
+        <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border ${feedback.badgeColor}`}>
           <Award className="w-4 h-4 text-sage-300" />
           <span>{feedback.title}</span>
         </div>
 
         {/* Delta Visualizer with Standardized Emojis */}
-        <div className="flex items-center justify-center gap-4 py-2">
-          <div className="text-center">
-            <span className="text-[10px] text-slate-400 block uppercase font-medium tracking-wider">Antes</span>
-            <div className="text-2xl sm:text-3xl font-semibold text-slate-100 mt-1 flex items-center justify-center gap-1.5">
+        <div className="flex items-center justify-center gap-5 py-2">
+          <div className="text-center" title="Nível avaliado antes de começar a respirar">
+            <span className="text-xs text-slate-400 block uppercase font-semibold tracking-wider">Antes</span>
+            <div className="text-3xl sm:text-4xl font-bold text-slate-100 mt-1 flex items-center justify-center gap-1.5">
               <span>{getTensionEmoji(preTension)}</span>
               <span>{preTension}</span>
             </div>
-            <span className="text-[11px] text-slate-400">{preInfo?.label}</span>
+            <span className="text-xs sm:text-sm text-slate-300 mt-0.5 block">{preInfo?.label}</span>
           </div>
 
           <div className="flex flex-col items-center justify-center px-1">
-            <TrendingDown className={`w-6 h-6 ${delta > 0 ? 'text-sage-300' : 'text-slate-500'}`} />
+            <TrendingDown className={`w-7 h-7 ${delta > 0 ? 'text-sage-300' : 'text-slate-500'}`} />
             {delta > 0 && (
-              <span className="text-[10px] font-medium text-sage-300 mt-0.5">
+              <span className="text-xs font-semibold text-sage-300 mt-0.5" title="Redução da tensão percebida">
                 -{delta} {delta === 1 ? 'nível' : 'níveis'}
               </span>
             )}
           </div>
 
-          <div className="text-center">
-            <span className="text-[10px] text-slate-400 block uppercase font-medium tracking-wider">Depois</span>
-            <div className="text-2xl sm:text-3xl font-semibold text-sand-200 mt-1 flex items-center justify-center gap-1.5">
+          <div className="text-center" title="Nível reavaliado após a respiração">
+            <span className="text-xs text-slate-400 block uppercase font-semibold tracking-wider">Depois</span>
+            <div className="text-3xl sm:text-4xl font-bold text-sand-200 mt-1 flex items-center justify-center gap-1.5">
               <span>{getTensionEmoji(postTension)}</span>
               <span>{postTension}</span>
             </div>
-            <span className="text-[11px] text-slate-400">{postInfo?.label}</span>
+            <span className="text-xs sm:text-sm text-slate-300 mt-0.5 block">{postInfo?.label}</span>
           </div>
         </div>
 
-        <p className="text-xs text-slate-300 leading-relaxed font-normal">
+        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
           {feedback.desc}
         </p>
 
-        <div className="pt-1 text-[11px] text-slate-400">
-          Duração da prática: <strong className="text-slate-200 font-medium">{Math.round(durationSeconds)} segundos</strong>
+        {/* Practice Details */}
+        <div 
+          className="pt-2 border-t border-petrol-800/80 flex items-center justify-between text-xs sm:text-sm text-slate-300"
+          title="Tempo executado versus tempo previsto, e ritmo respiratório praticado"
+        >
+          <span>
+            Prática: <strong className="text-sand-200 font-semibold">{Math.round(durationSeconds)}s</strong> / {targetDurationSeconds}s
+          </span>
+          <span className="font-mono text-xs text-sand-300 bg-petrol-950 px-2 py-0.5 rounded border border-petrol-800">
+            Ritmo: {formatPatternDisplay(breathingPattern)}
+          </span>
         </div>
       </div>
 
       {/* Survey CTA */}
-      <div className="p-4 rounded-2xl bg-petrol-900/50 border border-petrol-800 space-y-2.5">
-        <div className="flex items-start gap-2.5">
-          <div className="p-1.5 rounded-lg bg-petrol-800 text-sage-300 shrink-0 mt-0.5">
-            <Sparkles className="w-4 h-4" />
+      <div className="p-4 sm:p-5 rounded-2xl bg-petrol-900/50 border border-petrol-800 space-y-3">
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-petrol-800 text-sage-300 shrink-0 mt-0.5">
+            <Sparkles className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="text-xs font-semibold text-sand-200">
+            <h4 className="text-sm font-semibold text-sand-200">
               Colabore com a pesquisa acadêmica
             </h4>
-            <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
-              Sua avaliação anônima ajuda o Projeto de Extensão do UNI-RN.
+            <p className="text-xs sm:text-sm text-slate-300 mt-0.5 leading-relaxed">
+              Sua avaliação anônima ajuda no aprimoramento contínuo das ferramentas de apoio ao estudante.
             </p>
           </div>
         </div>
@@ -152,20 +169,22 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
           href={surveyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full py-2.5 px-4 rounded-xl bg-petrol-800 hover:bg-petrol-700 text-sand-200 border border-petrol-700/60 font-medium text-xs flex items-center justify-center gap-1.5 transition-all"
+          title="Abrir formulário breve de pesquisa acadêmica em nova aba"
+          className="w-full py-3 px-4 rounded-xl bg-petrol-800 hover:bg-petrol-700 text-sand-200 border border-petrol-700/60 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
         >
           <span>Responder questionário breve</span>
-          <ExternalLink className="w-3.5 h-3.5" />
+          <ExternalLink className="w-4 h-4" />
         </a>
       </div>
 
-      {/* Restart Button: goes directly to breathing */}
+      {/* Restart directly to breathing */}
       <button
         onClick={onRestart}
-        className="w-full py-3 px-6 rounded-2xl bg-sage-400 hover:bg-sage-300 text-petrol-950 font-semibold text-xs tracking-wide flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm"
+        title="Iniciar novo ciclo de respiração imediatamente"
+        className="w-full py-4 px-6 rounded-2xl bg-sage-400 hover:bg-sage-300 text-petrol-950 font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
       >
-        <RotateCcw className="w-4 h-4" />
-        <span>Fazer outra respiração</span>
+        <RotateCcw className="w-5 h-5 text-petrol-950" />
+        <span>Fazer outra sessão de respiração</span>
       </button>
     </motion.div>
   );
