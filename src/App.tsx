@@ -46,16 +46,45 @@ export function App() {
     setCurrentStep('summary');
   };
 
-  // Restart goes directly to the breathing exercise
+  // Restart goes directly to the breathing exercise per specification
   const handleRestart = () => {
     setSessionDuration(120);
     setCurrentStep('breathing');
   };
 
-  return (
-    <div className="min-h-[100dvh] flex flex-col bg-[#090d16] text-slate-100 relative selection:bg-cyan-500/30 selection:text-cyan-200">
-      <Header onOpenAdmin={() => setIsAdminOpen(true)} isOnline={!isOffline} />
+  // Step indicator helper
+  const getStepProgress = () => {
+    switch (currentStep) {
+      case 'onboarding':
+        return { current: 1, total: 4, label: 'Introdução' };
+      case 'pre-checkin':
+        return { current: 2, total: 4, label: 'Como você está' };
+      case 'compassion':
+        return { current: 2, total: 4, label: 'Acolhimento' };
+      case 'breathing':
+        return { current: 3, total: 4, label: 'Exercício 3:2:6' };
+      case 'post-checkout':
+        return { current: 4, total: 4, label: 'Reavaliação' };
+      case 'summary':
+        return { current: 4, total: 4, label: 'Conclusão' };
+      default:
+        return undefined;
+    }
+  };
 
+  return (
+    <div className="min-h-[100dvh] flex flex-col bg-[#090f15] text-slate-100 relative selection:bg-sage-400/20 selection:text-sand-200">
+      {/* Discreet organic ambient gradient */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md h-64 bg-petrol-800/20 blur-3xl pointer-events-none -z-10" />
+
+      {/* Header */}
+      <Header 
+        onOpenAdmin={() => setIsAdminOpen(true)} 
+        isOnline={!isOffline} 
+        stepProgress={getStepProgress()} 
+      />
+
+      {/* Main Container */}
       <main className="flex-1 flex flex-col max-w-md w-full mx-auto px-4 py-2 relative">
         <AnimatePresence mode="wait">
           {currentStep === 'onboarding' && (
@@ -109,8 +138,13 @@ export function App() {
         </AnimatePresence>
       </main>
 
-      <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
+      {/* Footer - hidden during breathing practice for zero distractions */}
+      <Footer 
+        onOpenAdmin={() => setIsAdminOpen(true)} 
+        hideDuringPractice={currentStep === 'breathing'} 
+      />
 
+      {/* Admin / Extension Research Metrics Drawer */}
       <Suspense fallback={null}>
         <AdminDrawer isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
       </Suspense>

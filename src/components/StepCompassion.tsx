@@ -11,49 +11,46 @@ interface StepCompassionProps {
 export const StepCompassion: React.FC<StepCompassionProps> = ({ preTension, onNext, onBack }) => {
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.97 }}
+      initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.35 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
       className="flex flex-col flex-1 justify-center space-y-6 py-6"
     >
-      {/* Icon */}
       <div className="flex justify-center">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-emerald-500/20 border border-cyan-500/20 flex items-center justify-center">
-          <ShieldCheck className="w-7 h-7 text-cyan-400" />
+        <div className="w-12 h-12 rounded-2xl bg-petrol-800/80 border border-petrol-700/60 flex items-center justify-center">
+          <ShieldCheck className="w-6 h-6 text-sage-300" />
         </div>
       </div>
 
-      {/* Compassionate quote */}
-      <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 relative">
-        <p className="text-base text-slate-100 font-medium leading-relaxed text-center italic">
+      <div className="p-5 rounded-2xl bg-petrol-900/60 border border-petrol-800/80 relative space-y-3">
+        <p className="text-base sm:text-lg text-sand-200 font-medium leading-relaxed text-center italic">
           "O que você sente agora não é seu inimigo. É apenas o seu corpo tentando cuidar de você."
         </p>
-        <p className="text-sm text-slate-300 text-center mt-3 not-italic">
-          Vamos respirar juntos e sinalizar segurança para o seu sistema.
+        <p className="text-xs sm:text-sm text-slate-300 text-center not-italic leading-relaxed">
+          Vamos respirar juntos, sinalizando segurança e estabilidade para o seu sistema.
         </p>
 
-        <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
-          <span>Tensão registrada</span>
-          <span className="font-semibold text-cyan-300">Nível {preTension} de 5</span>
+        <div className="pt-3 border-t border-petrol-800/80 flex items-center justify-between text-xs text-slate-400">
+          <span>Tensão autoavaliada</span>
+          <span className="font-medium text-sand-300">Nível {preTension} de 5</span>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <button
           onClick={onNext}
-          className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-bold text-sm shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+          className="w-full py-3.5 px-6 rounded-2xl bg-sage-400 hover:bg-sage-300 text-petrol-950 font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm"
         >
-          <span>Iniciar exercício de respiração</span>
+          <span>Iniciar exercício respiratório</span>
           <ArrowRight className="w-4 h-4" />
         </button>
 
         <button
           onClick={onBack}
-          className="w-full py-2.5 text-xs text-slate-400 hover:text-slate-200 transition-colors font-medium"
+          className="w-full py-2 text-xs text-slate-400 hover:text-slate-200 transition-colors font-medium"
         >
-          ← Alterar autoavaliação
+          ← Ajustar autoavaliação
         </button>
       </div>
     </motion.div>

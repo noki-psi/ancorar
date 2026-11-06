@@ -7,38 +7,34 @@ interface BreathingEngineProps {
   onComplete: (actualDurationSeconds: number) => void;
 }
 
-// 3s Inhale -> 2s Hold -> 6s Exhale (Strictly Preserved 3:2:6 Ratio)
-const PHASES: Record<BreathPhase, {
+// Immutable 3:2:6 ratio per AGENTS.md
+const PHASES_CONFIG: Record<BreathPhase, {
   label: string;
   duration: number;
-  color: string;
-  glow: string;
-  scale: number;
   subtext: string;
+  color: string;
+  scale: number;
 }> = {
   inhale: {
     label: 'Inspire',
     duration: 3,
-    color: '#38bdf8',
-    glow: 'rgba(56, 189, 248, 0.28)',
-    scale: 1.2,
-    subtext: 'Pelo nariz...',
+    subtext: 'Pelo nariz, suavemente',
+    color: '#7fae9b', // Sage green
+    scale: 1.22,
   },
   hold: {
     label: 'Segure',
     duration: 2,
-    color: '#fbbf24',
-    glow: 'rgba(251, 191, 36, 0.24)',
-    scale: 1.2,
-    subtext: 'Mantenha a calma...',
+    subtext: 'Mantenha o ar com leveza',
+    color: '#e5d7b5', // Sand gold
+    scale: 1.22,
   },
   exhale: {
     label: 'Expire',
     duration: 6,
-    color: '#34d399',
-    glow: 'rgba(52, 211, 153, 0.28)',
-    scale: 0.88,
-    subtext: 'Longo pela boca...',
+    subtext: 'Longo pela boca',
+    color: '#5c937f', // Deep sage
+    scale: 0.85,
   },
 };
 
@@ -49,15 +45,17 @@ const TIMER_OPTIONS = [
 ];
 
 export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) => {
-  const [selectedDuration, setSelectedDuration] = useState(120);
-  const [timeRemaining, setTimeRemaining] = useState(120);
-  const [isActive, setIsActive] = useState(true);
+  const [selectedDuration, setSelectedDuration] = useState<number>(120);
+  const [timeRemaining, setTimeRemaining] = useState<number>(120);
+  const [isActive, setIsActive] = useState<boolean>(true);
   const [phase, setPhase] = useState<BreathPhase>('inhale');
-  const [phaseSecondsLeft, setPhaseSecondsLeft] = useState(3);
-  const [isAudioMuted, setIsAudioMuted] = useState(false);
-  const [totalElapsedTime, setTotalElapsedTime] = useState(0);
+  const [phaseSecondsLeft, setPhaseSecondsLeft] = useState<number>(3);
+  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(false);
+  const [totalElapsedTime, setTotalElapsedTime] = useState<number>(0);
 
+  // References to keep cycle in exact mathematical synchronization
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const cycleTimeRef = useRef<number>(0); // 0 to 11 (3+2+6 = 11s)
 
   const playSoftTone = (freq: number) => {
     if (isAudioMuted) return;
@@ -66,77 +64,88 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) 
         const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
         if (AudioCtx) audioCtxRef.current = new AudioCtx();
       }
-      if (audioCtxRef.current?.state === 'suspended') audioCtxRef.current.resume();
+      if (audioCtxRef.current?.state === 'suspended') {
+        audioCtxRef.current.resume();
+      }
       if (!audioCtxRef.current) return;
 
       const osc = audioCtxRef.current.createOscillator();
       const gain = audioCtxRef.current.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, audioCtxRef.current.currentTime);
-      gain.gain.setValueAtTime(0.03, audioCtxRef.current.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtxRef.current.currentTime + 0.8);
+      gain.gain.setValueAtTime(0.025, audioCtxRef.current.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtxRef.current.currentTime + 0.85);
       osc.connect(gain);
       gain.connect(audioCtxRef.current.destination);
       osc.start();
-      osc.stop(audioCtxRef.current.currentTime + 0.8);
+      osc.stop(audioCtxRef.current.currentTime + 0.85);
     } catch {
       // Audio autoplay policy fallback
     }
   };
 
+  // Tone shift per phase trigger
   useEffect(() => {
     if (!isActive) return;
     const tones: Record<BreathPhase, number> = { inhale: 432, hold: 528, exhale: 360 };
     playSoftTone(tones[phase]);
   }, [phase, isActive, isAudioMuted]);
 
+  // Synchronized single interval clock
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    if (isActive && timeRemaining > 0) {
-      interval = setInterval(() => {
-        setTotalElapsedTime(p => p + 1);
-        setTimeRemaining(p => {
-          if (p <= 1) {
-            if (interval) clearInterval(interval);
-            return 0;
-          }
-          return p - 1;
-        });
-        setPhaseSecondsLeft(p => {
-          if (p <= 1) {
-            setPhase(c => c === 'inhale' ? 'hold' : c === 'hold' ? 'exhale' : 'inhale');
-            return 0;
-          }
-          return p - 1;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
+    if (!isActive || timeRemaining <= 0) return;
+
+    const interval = setInterval(() => {
+      setTotalElapsedTime(prev => prev + 1);
+
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          return 0;
+        }
+        return prev - 1;
+      });
+
+      // Synchronize 11-second master breathing cycle:
+      // [0, 1, 2] = Inhale (3s) -> phaseSecondsLeft: 3, 2, 1
+      // [3, 4] = Hold (2s) -> phaseSecondsLeft: 2, 1
+      // [5, 6, 7, 8, 9, 10] = Exhale (6s) -> phaseSecondsLeft: 6, 5, 4, 3, 2, 1
+      cycleTimeRef.current = (cycleTimeRef.current + 1) % 11;
+      const c = cycleTimeRef.current;
+
+      if (c < 3) {
+        setPhase('inhale');
+        setPhaseSecondsLeft(3 - c);
+      } else if (c < 5) {
+        setPhase('hold');
+        setPhaseSecondsLeft(2 - (c - 3));
+      } else {
+        setPhase('exhale');
+        setPhaseSecondsLeft(6 - (c - 5));
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [isActive, timeRemaining]);
 
-  useEffect(() => {
-    setPhaseSecondsLeft(PHASES[phase].duration);
-  }, [phase]);
-
+  // Handle completion when timer reaches 0
   useEffect(() => {
     if (timeRemaining === 0 && totalElapsedTime > 0) {
       onComplete(totalElapsedTime);
     }
   }, [timeRemaining, totalElapsedTime, onComplete]);
 
-  const handleSelectDuration = (s: number) => {
-    setSelectedDuration(s);
-    setTimeRemaining(s);
+  const handleSelectDuration = (seconds: number) => {
+    setSelectedDuration(seconds);
+    setTimeRemaining(seconds);
     setTotalElapsedTime(0);
+    cycleTimeRef.current = 0;
     setPhase('inhale');
     setPhaseSecondsLeft(3);
   };
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   const progress = ((selectedDuration - timeRemaining) / selectedDuration) * 100;
-  const cfg = PHASES[phase];
+  const currentCfg = PHASES_CONFIG[phase];
 
   return (
     <motion.div
@@ -145,142 +154,126 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) 
       exit={{ opacity: 0 }}
       className="flex flex-col flex-1 justify-between py-2 select-none"
     >
-      {/* ─── Top Bar: Duration Selector & Sound Toggle ─── */}
+      {/* Top bar controls */}
       <div className="flex items-center justify-between px-1">
-        <div className="inline-flex gap-1 p-1 rounded-full bg-slate-900/90 border border-slate-800/80 backdrop-blur-md">
-          {TIMER_OPTIONS.map(o => (
+        <div className="inline-flex gap-1 p-1 rounded-full bg-petrol-900/70 border border-petrol-800/80">
+          {TIMER_OPTIONS.map(opt => (
             <button
-              key={o.seconds}
-              onClick={() => handleSelectDuration(o.seconds)}
-              className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-300 ${
-                selectedDuration === o.seconds
-                  ? 'bg-slate-800 text-cyan-300 shadow-sm shadow-cyan-500/10'
+              key={opt.seconds}
+              onClick={() => handleSelectDuration(opt.seconds)}
+              className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all duration-300 ${
+                selectedDuration === opt.seconds
+                  ? 'bg-petrol-800 text-sand-200'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              {o.label}
+              {opt.label}
             </button>
           ))}
         </div>
 
         <button
           onClick={() => setIsAudioMuted(!isAudioMuted)}
-          aria-label={isAudioMuted ? 'Ativar tom suave' : 'Desativar tom suave'}
-          className="p-2 rounded-full text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-slate-800/60 transition-colors"
+          aria-label={isAudioMuted ? 'Ativar som' : 'Desativar som'}
+          className="p-2 rounded-full text-slate-400 hover:text-sand-200 bg-petrol-900/60 border border-petrol-800/60 transition-colors"
         >
-          {isAudioMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-cyan-400" />}
+          {isAudioMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-sage-300" />}
         </button>
       </div>
 
-      {/* ─── Central Breathing Circle: Clean, Meditative, Uncluttered ─── */}
+      {/* Central Organic Breathing Orb */}
       <div className="flex-1 flex flex-col items-center justify-center my-auto py-4">
-        {/* Generous boundary box so the circle NEVER overlaps anything */}
         <div className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
-          {/* Subtle Outer Pulsing Wave */}
+          {/* Subtle natural aura */}
           <motion.div
             animate={{
-              scale: [1, cfg.scale * 1.15, 1],
-              opacity: [0.12, 0.35, 0.12],
+              scale: [1, currentCfg.scale * 1.12, 1],
+              opacity: [0.1, 0.28, 0.1],
             }}
             transition={{
-              duration: cfg.duration,
+              duration: currentCfg.duration,
               ease: 'easeInOut',
               repeat: Infinity,
             }}
             className="absolute inset-0 rounded-full blur-3xl pointer-events-none transition-colors duration-700"
-            style={{ backgroundColor: cfg.color }}
+            style={{ backgroundColor: currentCfg.color }}
           />
 
-          {/* Faint Concentric Ripple Ring */}
+          {/* Calming Ripple Ring */}
           <motion.div
             animate={{
-              scale: cfg.scale * 1.08,
-              opacity: phase === 'hold' ? 0.4 : 0.2,
+              scale: currentCfg.scale * 1.05,
+              opacity: phase === 'hold' ? 0.35 : 0.18,
             }}
             transition={{
-              duration: cfg.duration,
+              duration: currentCfg.duration,
               ease: 'easeInOut',
             }}
             className="absolute inset-4 rounded-full border pointer-events-none transition-all duration-700"
-            style={{ borderColor: cfg.color }}
+            style={{ borderColor: currentCfg.color }}
           />
 
-          {/* Main Breathing Orb */}
+          {/* Main Breathing Circle */}
           <motion.div
-            animate={{ scale: cfg.scale }}
-            transition={{ duration: cfg.duration, ease: 'easeInOut' }}
-            className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-full border border-white/10 bg-slate-950/80 backdrop-blur-2xl flex flex-col items-center justify-center transition-all duration-700"
-            style={{
-              boxShadow: `0 0 60px -10px ${cfg.glow}`,
-            }}
+            animate={{ scale: currentCfg.scale }}
+            transition={{ duration: currentCfg.duration, ease: 'easeInOut' }}
+            className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-full border border-petrol-700/60 bg-petrol-950/90 backdrop-blur-md flex flex-col items-center justify-center transition-all duration-700 shadow-xl"
           >
-            {/* Inner subtle glow rim */}
-            <div
-              className="absolute inset-1 rounded-full border opacity-30 pointer-events-none transition-colors duration-700"
-              style={{ borderColor: cfg.color }}
-            />
-
             <AnimatePresence mode="wait">
               <motion.div
                 key={phase}
-                initial={{ opacity: 0, y: 3 }}
+                initial={{ opacity: 0, y: 2 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -3 }}
+                exit={{ opacity: 0, y: -2 }}
                 transition={{ duration: 0.25 }}
                 className="text-center px-4"
               >
-                {/* Clean Phase Name */}
                 <p
-                  className="text-sm font-bold tracking-widest uppercase transition-colors duration-500 mb-1"
-                  style={{ color: cfg.color }}
+                  className="text-sm font-semibold tracking-widest uppercase transition-colors duration-500 mb-1"
+                  style={{ color: currentCfg.color }}
                 >
-                  {cfg.label}
+                  {currentCfg.label}
                 </p>
 
-                {/* Big, Crisp, Serene Countdown Number */}
-                <p className="text-5xl sm:text-6xl font-black text-white tabular-nums leading-none tracking-tight">
+                <p className="text-5xl sm:text-6xl font-semibold text-sand-200 tabular-nums leading-none tracking-tight">
                   {phaseSecondsLeft}
                 </p>
 
-                {/* Gentle subtext instruction */}
-                <p className="text-[11px] text-slate-400 mt-2 font-medium tracking-wide">
-                  {cfg.subtext}
+                <p className="text-[11px] text-slate-400 mt-2 font-normal">
+                  {currentCfg.subtext}
                 </p>
               </motion.div>
             </AnimatePresence>
           </motion.div>
         </div>
 
-        {/* Minimalist time remaining under the orb */}
-        <p className="mt-4 text-xs font-medium text-slate-400 tabular-nums">
+        <p className="mt-4 text-xs text-slate-400 tabular-nums font-medium">
           {formatTime(timeRemaining)} restantes
         </p>
       </div>
 
-      {/* ─── Bottom Controls: Minimalist & Tactile ─── */}
+      {/* Bottom controls */}
       <div className="space-y-3 px-1">
-        {/* Clean Progress Line */}
-        <div className="w-full h-1 bg-slate-900 rounded-full overflow-hidden">
+        <div className="w-full h-1 bg-petrol-900 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-1000 ease-linear"
-            style={{ width: `${progress}%`, backgroundColor: cfg.color }}
+            style={{ width: `${progress}%`, backgroundColor: currentCfg.color }}
           />
         </div>
 
-        {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => setIsActive(!isActive)}
-            className="py-3 px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 border border-slate-800 transition-all active:scale-[0.98]"
+            className="py-3 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-200 text-xs font-medium flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
           >
             {isActive ? (
               <>
-                <Pause className="w-4 h-4 text-amber-400" />
+                <Pause className="w-4 h-4 text-sand-300" />
                 <span>Pausar</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 text-emerald-400" />
+                <Play className="w-4 h-4 text-sage-300" />
                 <span>Retomar</span>
               </>
             )}
@@ -288,9 +281,9 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete }) 
 
           <button
             onClick={() => onComplete(Math.max(totalElapsedTime, 10))}
-            className="py-3 px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 border border-slate-800 hover:border-slate-700 transition-all active:scale-[0.98]"
+            className="py-3 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-200 text-xs font-medium flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 text-sage-300" />
             <span>Concluir</span>
           </button>
         </div>
