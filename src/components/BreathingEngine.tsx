@@ -70,7 +70,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
       inhale: 432, 
       hold: 528, 
       exhale: 360,
-      hold_post_exhale: 396 
+      hold_post_exhale: 216 // Som mais grave e profundo para a pausa pós-exalação
     };
     playSoftTone(tones[phase]);
   }, [phase, isActive, isAudioMuted]);
@@ -132,34 +132,34 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   const progress = ((selectedDuration - timeRemaining) / selectedDuration) * 100;
 
-  // Phase metadata for colors and labels
+  // Phase metadata for colors and labels - short & clear to avoid overflow
   const phaseMetadata = {
     inhale: {
       label: 'Inspire',
-      subtext: 'Pelo nariz, com calma',
+      subtext: 'Pelo nariz',
       color: '#7fae9b', // Sage green
-      targetScale: 1.28,
+      targetScale: 1.25,
       duration: inhaleDuration,
     },
     hold: {
       label: 'Segure',
-      subtext: 'Pausa no ápice (pulmões cheios)',
+      subtext: 'Mantenha o ar',
       color: '#e5d7b5', // Sand gold
-      targetScale: 1.28, // Stays at maximum size during hold
+      targetScale: 1.25, // Stays at maximum size during hold
       duration: holdDuration,
     },
     exhale: {
       label: 'Expire',
-      subtext: 'Solte devagar pela boca',
+      subtext: 'Pela boca',
       color: '#5c937f', // Deep sage
-      targetScale: 0.72, // Shrinks back to small size
+      targetScale: 0.80, // Shrinks smoothly
       duration: exhaleDuration,
     },
     hold_post_exhale: {
       label: 'Pausa',
-      subtext: 'Silêncio interno (pulmões vazios)',
+      subtext: 'Sem pressa',
       color: '#8fa89b', // Neutral soft sage
-      targetScale: 0.72, // Stays at small size during post-exhale pause
+      targetScale: 0.80, // Stays at small size during post-exhale pause
       duration: holdPostExhaleDuration,
     },
   }[phase];
@@ -220,9 +220,9 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
         <div className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
           {/* Subtle Ambient Aura Expanding and Contracting with Breath */}
           <motion.div
-            initial={{ scale: 0.72 }}
+            initial={{ scale: 0.80 }}
             animate={{
-              scale: phase === 'exhale' ? 0.76 : 1.35,
+              scale: phase === 'exhale' || phase === 'hold_post_exhale' ? 0.82 : 1.30,
               opacity: phase === 'hold' ? 0.35 : phase === 'inhale' ? 0.28 : 0.12,
             }}
             transition={{
@@ -235,9 +235,9 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
 
           {/* Faint Concentric Ring Following the Orb Scale */}
           <motion.div
-            initial={{ scale: 0.72 }}
+            initial={{ scale: 0.80 }}
             animate={{
-              scale: phase === 'exhale' ? 0.78 : 1.30,
+              scale: phase === 'exhale' || phase === 'hold_post_exhale' ? 0.84 : 1.25,
               opacity: phase === 'hold' ? 0.4 : 0.2,
             }}
             transition={{
@@ -250,7 +250,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
 
           {/* Main Breathing Circle */}
           <motion.div
-            initial={{ scale: 0.72 }}
+            initial={{ scale: 0.80 }}
             animate={{
               scale: phaseMetadata.targetScale,
             }}
@@ -258,7 +258,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
               duration: phaseMetadata.duration,
               ease: [0.42, 0, 0.58, 1],
             }}
-            className="relative w-48 h-48 sm:w-56 sm:h-56 rounded-full border border-petrol-700/60 bg-petrol-950/90 backdrop-blur-md flex flex-col items-center justify-center transition-colors duration-700 shadow-2xl"
+            className="relative w-52 h-52 sm:w-60 sm:h-60 rounded-full border border-petrol-700/60 bg-petrol-950/90 backdrop-blur-md flex flex-col items-center justify-center transition-colors duration-700 shadow-2xl p-4"
           >
             {/* Inner rim highlight */}
             <div
@@ -273,10 +273,10 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -3 }}
                 transition={{ duration: 0.25 }}
-                className="text-center px-4"
+                className="text-center px-2 max-w-[150px] mx-auto select-none"
               >
                 <p
-                  className="text-sm sm:text-base font-bold tracking-widest uppercase transition-colors duration-500 mb-1"
+                  className="text-xs sm:text-sm font-bold tracking-widest uppercase transition-colors duration-500 mb-0.5"
                   style={{ color: phaseMetadata.color }}
                   title="Fase atual da respiração"
                 >
@@ -284,13 +284,13 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
                 </p>
 
                 <p 
-                  className="text-6xl sm:text-7xl font-bold text-sand-200 tabular-nums leading-none tracking-tight my-1"
+                  className="text-5xl sm:text-6xl font-bold text-sand-200 tabular-nums leading-none tracking-tight my-1"
                   title="Segundos restantes nesta fase"
                 >
                   {phaseSecondsLeft}
                 </p>
 
-                <p className="text-xs text-slate-300 mt-2 font-medium">
+                <p className="text-xs text-slate-300 font-medium leading-tight">
                   {phaseMetadata.subtext}
                 </p>
               </motion.div>

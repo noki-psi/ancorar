@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, GraduationCap, ArrowUpRight, Heart, User } from 'lucide-react';
+import { BookOpen, GraduationCap, Heart, User } from 'lucide-react';
 
 interface FooterProps {
   onOpenAdmin: () => void;
@@ -37,7 +37,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onOpenPersonal, hid
           >
             <BookOpen className="w-3.5 h-3.5" />
             <span>Painel da Pesquisa</span>
-            <ArrowUpRight className="w-3.5 h-3.5 opacity-60" />
           </button>
           <span className="text-petrol-700">•</span>
           <a

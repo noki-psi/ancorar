@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RefreshCw, Database, FileSpreadsheet, ShieldAlert, Cloud, Copy, Check, Terminal } from 'lucide-react';
+import { X, RefreshCw, Database, BookOpen, FileSpreadsheet, ShieldAlert } from 'lucide-react';
 import { SessionRecord } from '../types';
 import { fetchAllSessions, isSupabaseConfigured } from '../lib/supabase';
 import { getTensionEmoji } from '../lib/constants';
@@ -15,8 +15,6 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
-  const [showSqlHelp, setShowSqlHelp] = useState<boolean>(false);
-  const [copied, setCopied] = useState<boolean>(false);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -103,7 +101,7 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
             <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Database className="w-5 h-5 text-cyan-400" />
+                  <BookOpen className="w-5 h-5 text-cyan-400" />
                   <span>Painel do Projeto de Extensão</span>
                 </h3>
                 <p className="text-xs text-slate-300 mt-0.5">
@@ -125,7 +123,7 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
                 className="flex items-center gap-2"
                 title={isOfflineMode ? "Operando com dados salvos no navegador" : "Sincronizado em tempo real com o banco Supabase"}
               >
-                <Cloud className="w-4 h-4 text-cyan-400" />
+                <Database className="w-4 h-4 text-cyan-400" />
                 <span className={`w-2 h-2 rounded-full ${isOfflineMode ? 'bg-amber-400' : 'bg-emerald-400 animate-pulse'}`} />
                 <span className="text-slate-300 font-medium">
                   {isOfflineMode 
@@ -185,53 +183,6 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
                   <div className="text-xs uppercase font-bold text-slate-400">% com Redução</div>
                   <div className="text-2xl sm:text-3xl font-black text-teal-300 mt-1">{reductionPercentage}%</div>
                 </div>
-              </div>
-
-              {/* Database Schema & Reset Helper */}
-              <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
-                    <Terminal className="w-4 h-4 text-cyan-400" />
-                    <span>Estrutura do Banco & Zerar Dados</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowSqlHelp(!showSqlHelp)}
-                    className="text-xs text-cyan-400 hover:text-cyan-300 font-medium"
-                  >
-                    {showSqlHelp ? 'Ocultar' : 'Ver comandos SQL'}
-                  </button>
-                </div>
-
-                {showSqlHelp && (
-                  <div className="pt-2 border-t border-slate-800 space-y-2.5 text-xs text-slate-300">
-                    <p className="text-[11px] text-slate-400 leading-relaxed">
-                      Para adicionar as colunas de ritmo e tempo estimado ou zerar os testes anteriores no Supabase, cole os comandos no <strong>SQL Editor</strong> do Supabase:
-                    </p>
-                    <pre className="p-2.5 rounded-xl bg-slate-950 font-mono text-[11px] text-cyan-300 overflow-x-auto border border-slate-800 select-all">
-{`-- 1. Adicionar colunas de ritmo e tempo previsto
-alter table public.sessions add column if not exists breathing_pattern text default '326';
-alter table public.sessions add column if not exists target_duration_seconds integer default 120;
-
--- 2. (Opcional) Zerar todas as sessões anteriores de teste
--- truncate table public.sessions;`}
-                    </pre>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const sql = `alter table public.sessions add column if not exists breathing_pattern text default '326';\nalter table public.sessions add column if not exists target_duration_seconds integer default 120;`;
-                        navigator.clipboard.writeText(sql);
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 2000);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors"
-                    >
-                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
-                      <span>{copied ? 'Comando copiado!' : 'Copiar comando de migração'}</span>
-                    </button>
-                  </div>
-                )}
               </div>
 
               {/* Action: Export CSV */}

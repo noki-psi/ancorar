@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, PhoneCall, User } from 'lucide-react';
+import { BookOpen, PhoneCall, User } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface HeaderProps {
@@ -68,7 +68,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAdmin, onOpenPersonal, isO
             title="Abrir painel analítico da pesquisa"
             className="p-1.5 rounded-lg text-slate-400 hover:text-sand-200 transition-colors"
           >
-            <Database className="w-4 h-4" />
+            <BookOpen className="w-4 h-4" />
           </button>
         </div>
       </div>
