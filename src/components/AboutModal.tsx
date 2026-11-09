@@ -81,7 +81,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({
                   1. Modelo Cognitivo-Comportamental (Beck)
                 </p>
                 <p>
-                  Identificação e psicoeducação sobre os pensamentos automáticos típicos de avaliação (<em>"não vou lembrar"</em>, <em>"vou falhar"</em>) e sua repercussão fisiológica no corpo.
+                  Identificação e psicoeducação sobre pensamentos automáticos em momentos de sobrecarga e estresse, e sua repercussão fisiológica imediata no corpo (taquicardia, respiração curta e inquietação).
                 </p>
               </div>
 

@@ -3,26 +3,24 @@ import { AnimatePresence } from 'framer-motion';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { StepOnboarding } from './components/StepOnboarding';
-import { StepPreCheckin } from './components/StepPreCheckin';
-import { StepCompassion } from './components/StepCompassion';
 import { BreathingEngine } from './components/BreathingEngine';
-import { StepPostCheckout } from './components/StepPostCheckout';
 import { StepSummary } from './components/StepSummary';
 import { AboutModal } from './components/AboutModal';
 import { NavigationMenu } from './components/NavigationMenu';
 import { Step } from './types';
 import { getAnonymousUserId, saveSession, isSupabaseConfigured, checkSupabaseConnection, syncOfflineSessions } from './lib/supabase';
-import { getBreathingSettings, saveBreathingSettings, BreathingSettings, getPatternRaw, formatPatternDisplay } from './lib/settings';
+import { getBreathingSettings, saveBreathingSettings, BreathingSettings, getPatternRaw } from './lib/settings';
 
 const AdminDrawer = lazy(() => import('./components/AdminDrawer'));
 const PersonalDrawer = lazy(() => import('./components/PersonalDrawer'));
 
 export function App() {
   const [currentStep, setCurrentStep] = useState<Step>('onboarding');
-  const [preTension, setPreTension] = useState<number>(4);
-  const [postTension, setPostTension] = useState<number>(2);
+  const [preTension, setPreTension] = useState<number | null>(null);
+  const [postTension, setPostTension] = useState<number | null>(null);
   const [breathingSettings, setBreathingSettings] = useState<BreathingSettings>(getBreathingSettings);
   const [sessionDuration, setSessionDuration] = useState<number>(() => getBreathingSettings().totalDurationSeconds);
+
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [isPersonalOpen, setIsPersonalOpen] = useState<boolean>(false);
   const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
@@ -32,7 +30,7 @@ export function App() {
     return (localStorage.getItem('ancorar_theme') as 'light' | 'dark') || 'light';
   });
 
-  // Apply theme to html document
+  // Apply theme to document
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -42,6 +40,7 @@ export function App() {
     localStorage.setItem('ancorar_theme', theme);
   }, [theme]);
 
+  // Handle network connectivity & offline queue sync
   useEffect(() => {
     getAnonymousUserId();
     const handleConnectivity = () => {
@@ -67,19 +66,25 @@ export function App() {
     saveBreathingSettings(newSettings);
   };
 
-  const handleFinishBreathing = (actualDuration: number) => {
-    setSessionDuration(actualDuration);
-    setCurrentStep('post-checkout');
+  // Direct start: 1-click from Home straight into breathing!
+  const handleStartBreathing = () => {
+    setSessionDuration(breathingSettings.totalDurationSeconds);
+    setCurrentStep('breathing');
   };
 
-  const handleCompleteSession = async () => {
+  // When breathing finishes, save session and transition directly to summary
+  const handleFinishBreathing = async (actualDuration: number) => {
+    setSessionDuration(actualDuration);
     const userId = getAnonymousUserId();
     const patternRaw = getPatternRaw(breathingSettings);
+    const effectivePre = preTension ?? 3;
+    const effectivePost = postTension ?? effectivePre;
+
     const result = await saveSession({
       anonymous_user_id: userId,
-      pre_tension: preTension,
-      post_tension: postTension,
-      duration_seconds: sessionDuration,
+      pre_tension: effectivePre,
+      post_tension: effectivePost,
+      duration_seconds: actualDuration,
       target_duration_seconds: breathingSettings.totalDurationSeconds,
       breathing_pattern: patternRaw,
     });
@@ -88,41 +93,37 @@ export function App() {
     setCurrentStep('summary');
   };
 
-  // Restart goes directly to the breathing exercise per specification
+  // Update optional tension ratings from the summary screen
+  const handleUpdateTension = async (newPre: number, newPost: number) => {
+    setPreTension(newPre);
+    setPostTension(newPost);
+    const userId = getAnonymousUserId();
+    const patternRaw = getPatternRaw(breathingSettings);
+
+    const result = await saveSession({
+      anonymous_user_id: userId,
+      pre_tension: newPre,
+      post_tension: newPost,
+      duration_seconds: sessionDuration,
+      target_duration_seconds: breathingSettings.totalDurationSeconds,
+      breathing_pattern: patternRaw,
+    });
+
+    setIsOffline(result.isOffline);
+  };
+
+  // Instant restart: goes straight into breathing
   const handleRestart = () => {
+    setPostTension(null);
     setSessionDuration(breathingSettings.totalDurationSeconds);
     setCurrentStep('breathing');
   };
 
-  // Back to start / onboarding screen
+  // Return to the minimal Home screen
   const handleGoHome = () => {
+    setPreTension(null);
+    setPostTension(null);
     setCurrentStep('onboarding');
-  };
-
-  // Direct practice start
-  const handleStartDirectPractice = () => {
-    setSessionDuration(breathingSettings.totalDurationSeconds);
-    setCurrentStep('breathing');
-  };
-
-  // Step indicator helper
-  const getStepProgress = () => {
-    switch (currentStep) {
-      case 'onboarding':
-        return undefined; // Clean home without progress clutter
-      case 'pre-checkin':
-        return { current: 1, total: 4, label: 'Autoavaliação' };
-      case 'compassion':
-        return { current: 2, total: 4, label: 'Acolhimento' };
-      case 'breathing':
-        return { current: 3, total: 4, label: `Respiração ${formatPatternDisplay(breathingSettings)}` };
-      case 'post-checkout':
-        return { current: 4, total: 4, label: 'Reavaliação' };
-      case 'summary':
-        return { current: 4, total: 4, label: 'Resultado' };
-      default:
-        return undefined;
-    }
   };
 
   return (
@@ -131,34 +132,19 @@ export function App() {
       <Header 
         onOpenMenu={() => setIsMenuOpen(true)}
         onGoHome={handleGoHome}
-        stepProgress={getStepProgress()} 
       />
 
       {/* Main Container */}
       <main className="flex-1 flex flex-col max-w-md w-full mx-auto px-4 py-2 relative">
         <AnimatePresence mode="wait">
           {currentStep === 'onboarding' && (
-            <StepOnboarding key="onboarding" onNext={() => setCurrentStep('pre-checkin')} />
-          )}
-
-          {currentStep === 'pre-checkin' && (
-            <StepPreCheckin
-              key="pre-checkin"
-              value={preTension}
-              onChange={setPreTension}
-              onNext={() => setCurrentStep('compassion')}
-              onBack={handleGoHome}
-            />
-          )}
-
-          {currentStep === 'compassion' && (
-            <StepCompassion
-              key="compassion"
-              preTension={preTension}
+            <StepOnboarding 
+              key="home" 
+              onStartBreathing={handleStartBreathing}
               settings={breathingSettings}
               onUpdateSettings={handleUpdateSettings}
-              onNext={() => setCurrentStep('breathing')}
-              onBack={() => setCurrentStep('pre-checkin')}
+              preTension={preTension}
+              onSelectPreTension={setPreTension}
             />
           )}
 
@@ -168,15 +154,6 @@ export function App() {
               settings={breathingSettings}
               onUpdateSettings={handleUpdateSettings}
               onComplete={handleFinishBreathing}
-            />
-          )}
-
-          {currentStep === 'post-checkout' && (
-            <StepPostCheckout
-              key="post-checkout"
-              value={postTension}
-              onChange={setPostTension}
-              onNext={handleCompleteSession}
             />
           )}
 
@@ -192,6 +169,7 @@ export function App() {
               onRestart={handleRestart}
               onGoHome={handleGoHome}
               onOpenPersonal={() => setIsPersonalOpen(true)}
+              onUpdateTension={handleUpdateTension}
             />
           )}
         </AnimatePresence>
@@ -208,7 +186,7 @@ export function App() {
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onGoHome={handleGoHome}
-        onStartPractice={handleStartDirectPractice}
+        onStartPractice={handleStartBreathing}
         onOpenAbout={() => setIsAboutOpen(true)}
         onOpenPersonal={() => setIsPersonalOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
@@ -230,7 +208,7 @@ export function App() {
         <PersonalDrawer 
           isOpen={isPersonalOpen} 
           onClose={() => setIsPersonalOpen(false)} 
-          onStartSession={handleStartDirectPractice}
+          onStartSession={handleStartBreathing}
         />
       </Suspense>
 

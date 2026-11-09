@@ -12,9 +12,9 @@ export const TENSION_LEVELS: Record<number, TensionLevel> = {
   5: {
     level: 5,
     emoji: '🔴',
-    label: 'Muito ansioso',
-    desc: 'Coração acelerado, mente a mil, aperto no peito',
-    color: 'text-rose-400',
+    label: 'Muito tenso',
+    desc: 'Coração acelerado, mente agitada, aperto no peito',
+    color: 'text-rose-500',
     accentBg: 'bg-rose-500/10',
     badgeBorder: 'border-rose-500/30',
   },
@@ -22,8 +22,8 @@ export const TENSION_LEVELS: Record<number, TensionLevel> = {
     level: 4,
     emoji: '🟠',
     label: 'Tenso',
-    desc: 'Músculos rígidos, pensamentos de prova',
-    color: 'text-orange-400',
+    desc: 'Músculos rígidos, pensamentos acelerados',
+    color: 'text-orange-500',
     accentBg: 'bg-orange-500/10',
     badgeBorder: 'border-orange-500/30',
   },
@@ -31,8 +31,8 @@ export const TENSION_LEVELS: Record<number, TensionLevel> = {
     level: 3,
     emoji: '🟡',
     label: 'Agitado',
-    desc: 'Dificuldade de foco, inquietude',
-    color: 'text-amber-400',
+    desc: 'Dificuldade de foco, leve inquietação',
+    color: 'text-amber-500',
     accentBg: 'bg-amber-500/10',
     badgeBorder: 'border-amber-500/30',
   },
@@ -40,8 +40,8 @@ export const TENSION_LEVELS: Record<number, TensionLevel> = {
     level: 2,
     emoji: '🟢',
     label: 'Neutro',
-    desc: 'Tranquilo com leve expectativa',
-    color: 'text-emerald-400',
+    desc: 'Tranquilo com ritmo confortável',
+    color: 'text-emerald-500',
     accentBg: 'bg-emerald-500/10',
     badgeBorder: 'border-emerald-500/30',
   },
@@ -50,7 +50,7 @@ export const TENSION_LEVELS: Record<number, TensionLevel> = {
     emoji: '🔵',
     label: 'Calmo',
     desc: 'Respiração profunda e mente estável',
-    color: 'text-cyan-400',
+    color: 'text-cyan-500',
     accentBg: 'bg-cyan-500/10',
     badgeBorder: 'border-cyan-500/30',
   },
@@ -64,7 +64,6 @@ export const TENSION_LIST: TensionLevel[] = [
   TENSION_LEVELS[1],
 ];
 
-export function getTensionEmoji(level: number): string {
-  const rounded = Math.min(5, Math.max(1, Math.round(level)));
-  return TENSION_LEVELS[rounded]?.emoji || '⚪';
-}
+export const getTensionEmoji = (level: number): string => {
+  return TENSION_LEVELS[level]?.emoji || '🟡';
+};

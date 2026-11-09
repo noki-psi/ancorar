@@ -9,14 +9,12 @@ export interface SessionRecord {
   target_duration_seconds?: number; // e.g. 120
   created_at?: string;
   synced_to_cloud?: boolean;
+  evaluation_skipped?: boolean;
 }
 
 export type Step = 
   | 'onboarding'
-  | 'pre-checkin'
-  | 'compassion'
   | 'breathing'
-  | 'post-checkout'
   | 'summary';
 
 export type BreathPhase = 'inhale' | 'hold' | 'exhale' | 'hold_post_exhale';
