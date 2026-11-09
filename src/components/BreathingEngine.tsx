@@ -58,7 +58,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
       const gain = audioCtxRef.current.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, audioCtxRef.current.currentTime);
-      gain.gain.setValueAtTime(0.025, audioCtxRef.current.currentTime);
+      gain.gain.setValueAtTime(0.02, audioCtxRef.current.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.0001, audioCtxRef.current.currentTime + 0.85);
       osc.connect(gain);
       gain.connect(audioCtxRef.current.destination);
@@ -176,34 +176,34 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   const progress = ((selectedDuration - timeRemaining) / selectedDuration) * 100;
 
-  // Phase metadata for colors and labels - short & clear to avoid overflow
+  // Phase metadata with soothing, calm colors
   const phaseMetadata = {
     inhale: {
       label: 'Inspire',
       subtext: 'Pelo nariz',
-      color: '#7fae9b', // Sage green
+      color: '#2d604f', // Calm natural sage
       targetScale: 1.25,
       duration: currentSettings.inhaleDuration,
     },
     hold: {
       label: 'Suspenda',
       subtext: 'Mantenha o ar',
-      color: '#e5d7b5', // Sand gold
-      targetScale: 1.25, // Stays at maximum size during hold
+      color: '#a07838', // Sober warm gold
+      targetScale: 1.25,
       duration: currentSettings.holdDuration,
     },
     exhale: {
       label: 'Expire',
       subtext: 'Pela boca',
-      color: '#5c937f', // Deep sage
-      targetScale: 0.80, // Shrinks smoothly
+      color: '#1f4e40', // Deep peaceful forest
+      targetScale: 0.80,
       duration: currentSettings.exhaleDuration,
     },
     hold_post_exhale: {
       label: 'Suspenda',
       subtext: 'Sem tensões',
-      color: '#e5d7b5', // Same gold as pre-exhale suspension
-      targetScale: 0.80, // Stays at small size during post-exhale pause
+      color: '#a07838', // Same gold as pre-exhale suspension
+      targetScale: 0.80,
       duration: currentSettings.holdPostExhaleDuration || 0,
     },
   }[phase];
@@ -219,12 +219,12 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="flex flex-col flex-1 justify-between py-2 select-none"
+      className="flex flex-col flex-1 justify-between py-2 select-none max-w-md mx-auto w-full"
     >
       {/* Top bar: minimal duration selector & controls */}
       <div className="flex items-center justify-between px-1">
         <div 
-          className="inline-flex gap-1.5 p-1 rounded-full bg-petrol-900/70 border border-petrol-800/80"
+          className="inline-flex gap-1 p-1 rounded-full bg-stone-100 dark:bg-stone-800/80 border border-stone-200/80 dark:border-stone-700/60"
           title="Selecione o tempo total desta sessão"
         >
           {timerOptions.map(opt => (
@@ -232,10 +232,10 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
               key={opt.seconds}
               onClick={() => handleSelectDuration(opt.seconds)}
               title={`Definir sessão de ${opt.label}`}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
                 selectedDuration === opt.seconds
-                  ? 'bg-petrol-800 text-sand-200 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-xs'
+                  : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200'
               }`}
             >
               {opt.label}
@@ -243,16 +243,16 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* Discreet button to view/adjust settings during practice without blocking the orb */}
           <button
             onClick={() => setShowInSessionSettings(prev => !prev)}
             aria-label="Ajustar ritmo"
             title={showInSessionSettings ? 'Ocultar ajustes de ritmo' : 'Ajustar ritmo durante o exercício (+1s / -1s)'}
-            className={`p-2.5 rounded-full border transition-all ${
+            className={`p-2 rounded-full border transition-all ${
               showInSessionSettings 
-                ? 'bg-sage-400/20 text-sand-200 border-sage-400/50' 
-                : 'text-slate-400 hover:text-sand-200 bg-petrol-900/60 border-petrol-800/60'
+                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700' 
+                : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 bg-stone-100 dark:bg-stone-800/80 border-stone-200/80 dark:border-stone-700/60'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -261,16 +261,16 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
           <button
             onClick={() => setIsAudioMuted(!isAudioMuted)}
             aria-label={isAudioMuted ? 'Ativar som' : 'Desativar som'}
-            title={isAudioMuted ? 'Ativar sinal sonoro suave nas trocas de fase' : 'Desativar sinal sonoro'}
-            className="p-2.5 rounded-full text-slate-400 hover:text-sand-200 bg-petrol-900/60 border border-petrol-800/60 transition-colors"
+            title={isAudioMuted ? 'Ativar sinal sonoro suave' : 'Desativar sinal sonoro'}
+            className="p-2 rounded-full text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 bg-stone-100 dark:bg-stone-800/80 border-stone-200/80 dark:border-stone-700/60 transition-colors"
           >
-            {isAudioMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-sage-300" />}
+            {isAudioMuted ? <VolumeX className="w-4 h-4 text-rose-500" /> : <Volume2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />}
           </button>
         </div>
       </div>
 
       {/* 
-        ─── Central Organic Breathing Orb (Unblocked) ───
+        ─── Central Organic Breathing Orb (Unblocked, Peaceful & Sober) ───
       */}
       <div className="flex-1 flex flex-col items-center justify-center my-auto py-2">
         <div className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
@@ -278,14 +278,14 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
           <motion.div
             initial={{ scale: 0.80 }}
             animate={{
-              scale: phase === 'exhale' || phase === 'hold_post_exhale' ? 0.82 : 1.30,
-              opacity: phase === 'hold' || phase === 'hold_post_exhale' ? 0.35 : phase === 'inhale' ? 0.28 : 0.12,
+              scale: phase === 'exhale' || phase === 'hold_post_exhale' ? 0.84 : 1.26,
+              opacity: phase === 'hold' || phase === 'hold_post_exhale' ? 0.18 : phase === 'inhale' ? 0.16 : 0.08,
             }}
             transition={{
               duration: phaseMetadata.duration,
               ease: [0.42, 0, 0.58, 1],
             }}
-            className="absolute inset-0 rounded-full blur-3xl pointer-events-none transition-colors duration-700"
+            className="absolute inset-0 rounded-full blur-2xl pointer-events-none transition-colors duration-700"
             style={{ backgroundColor: phaseMetadata.color }}
           />
 
@@ -293,14 +293,14 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
           <motion.div
             initial={{ scale: 0.80 }}
             animate={{
-              scale: phase === 'exhale' || phase === 'hold_post_exhale' ? 0.84 : 1.25,
-              opacity: phase === 'hold' || phase === 'hold_post_exhale' ? 0.4 : 0.2,
+              scale: phase === 'exhale' || phase === 'hold_post_exhale' ? 0.86 : 1.22,
+              opacity: phase === 'hold' || phase === 'hold_post_exhale' ? 0.3 : 0.15,
             }}
             transition={{
               duration: phaseMetadata.duration,
               ease: [0.42, 0, 0.58, 1],
             }}
-            className="absolute inset-3 rounded-full border pointer-events-none transition-all duration-700"
+            className="absolute inset-4 rounded-full border pointer-events-none transition-all duration-700"
             style={{ borderColor: phaseMetadata.color }}
           />
 
@@ -314,11 +314,11 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
               duration: phaseMetadata.duration,
               ease: [0.42, 0, 0.58, 1],
             }}
-            className="relative w-52 h-52 sm:w-60 sm:h-60 rounded-full border border-petrol-700/60 bg-petrol-950/90 backdrop-blur-md flex flex-col items-center justify-center transition-colors duration-700 shadow-2xl p-4"
+            className="relative w-52 h-52 sm:w-56 sm:h-56 rounded-full border border-stone-200 dark:border-stone-800 bg-white/95 dark:bg-[#151c22]/95 backdrop-blur-md flex flex-col items-center justify-center transition-colors duration-700 shadow-xl p-4"
           >
             {/* Inner rim highlight */}
             <div
-              className="absolute inset-1.5 rounded-full border opacity-25 pointer-events-none transition-colors duration-700"
+              className="absolute inset-1.5 rounded-full border opacity-20 pointer-events-none transition-colors duration-700"
               style={{ borderColor: phaseMetadata.color }}
             />
 
@@ -328,7 +328,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
                 initial={{ opacity: 0, y: 3 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -3 }}
-                transition={{ duration: 0.25 }}
+                transition={{ duration: 0.22 }}
                 className="text-center px-2 max-w-[150px] mx-auto select-none"
               >
                 <p
@@ -340,13 +340,13 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
                 </p>
 
                 <p 
-                  className="text-5xl sm:text-6xl font-bold text-sand-200 tabular-nums leading-none tracking-tight my-1"
+                  className="text-5xl sm:text-6xl font-bold text-stone-900 dark:text-stone-100 tabular-nums leading-none tracking-tight my-1"
                   title="Segundos restantes nesta fase"
                 >
                   {phaseSecondsLeft}
                 </p>
 
-                <p className="text-xs text-slate-300 font-medium leading-tight">
+                <p className="text-xs text-stone-500 dark:text-stone-400 font-medium leading-tight">
                   {phaseMetadata.subtext}
                 </p>
               </motion.div>
@@ -360,19 +360,19 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
       */}
       <div className="space-y-3 px-1">
         {/* Time Remaining & Rhythm display (clickable to open adjustments) */}
-        <div className="flex items-center justify-between text-xs sm:text-sm text-slate-300 font-medium px-0.5">
+        <div className="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 font-medium px-0.5">
           <button
             type="button"
             onClick={() => setShowInSessionSettings(prev => !prev)}
-            className="text-xs text-slate-300 font-mono bg-petrol-900/80 hover:bg-petrol-800 px-2 py-0.5 rounded-md border border-petrol-800 transition-colors flex items-center gap-1.5"
+            className="text-xs font-mono bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 px-2 py-0.5 rounded-md border border-stone-200 dark:border-stone-700 transition-colors flex items-center gap-1.5"
             title="Ajustar ritmo durante a prática (+1s / -1s)"
           >
-            <SlidersHorizontal className="w-3 h-3 text-sage-400" />
+            <SlidersHorizontal className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
             <span>{formatPatternDisplay(currentSettings)}</span>
           </button>
 
           <span 
-            className="tabular-nums text-sand-200 font-semibold"
+            className="tabular-nums text-stone-800 dark:text-stone-200 font-semibold"
             title="Tempo restante da prática"
           >
             {formatTime(timeRemaining)} restantes
@@ -381,7 +381,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
 
         {/* Progress Bar */}
         <div 
-          className="w-full h-2 bg-petrol-900 rounded-full overflow-hidden"
+          className="w-full h-1.5 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden"
           title={`Progresso da sessão: ${Math.round(progress)}%`}
         >
           <div
@@ -397,12 +397,12 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
               initial={{ opacity: 0, y: 8, height: 0 }}
               animate={{ opacity: 1, y: 0, height: 'auto' }}
               exit={{ opacity: 0, y: 8, height: 0 }}
-              className="overflow-hidden bg-petrol-900/95 border border-petrol-800/90 rounded-2xl p-2.5 shadow-xl space-y-2"
+              className="overflow-hidden bg-white dark:bg-[#151c22] border border-stone-200 dark:border-stone-800 rounded-2xl p-2.5 shadow-lg space-y-2"
             >
               {/* Header with +1s / -1s global shift */}
               <div className="flex items-center justify-between gap-1.5">
-                <span className="text-[11px] font-semibold text-slate-300">
-                  Ajustar segundos:
+                <span className="text-[11px] font-semibold text-stone-700 dark:text-stone-300">
+                  Ajustar ritmo ao vivo:
                 </span>
 
                 <div className="flex items-center gap-1.5">
@@ -410,7 +410,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
                     type="button"
                     onClick={() => handleShiftAll(-1)}
                     title="Diminuir 1 segundo em todas as fases da respiração"
-                    className="px-2 py-1 rounded-lg bg-petrol-800 hover:bg-petrol-700 active:scale-95 text-sand-200 text-xs font-bold border border-petrol-700 transition-all"
+                    className="px-2 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 active:scale-95 text-stone-800 dark:text-stone-200 text-xs font-bold border border-stone-200 dark:border-stone-700 transition-all"
                   >
                     -1s em tudo
                   </button>
@@ -419,7 +419,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
                     type="button"
                     onClick={() => handleShiftAll(+1)}
                     title="Aumentar 1 segundo em todas as fases da respiração"
-                    className="px-2 py-1 rounded-lg bg-petrol-800 hover:bg-petrol-700 active:scale-95 text-sand-200 text-xs font-bold border border-petrol-700 transition-all"
+                    className="px-2 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 active:scale-95 text-stone-800 dark:text-stone-200 text-xs font-bold border border-stone-200 dark:border-stone-700 transition-all"
                   >
                     +1s em tudo
                   </button>
@@ -429,7 +429,7 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
                     onClick={() => setShowInSessionSettings(false)}
                     aria-label="Ocultar ajustes"
                     title="Ocultar ajustes"
-                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-petrol-800"
+                    className="p-1 rounded-md text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -440,27 +440,27 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
               <div className="grid grid-cols-4 gap-1 text-center text-xs">
                 {/* Inhale */}
                 <div 
-                  className="p-1.5 rounded-xl bg-petrol-950/70 border border-petrol-800/80"
+                  className="p-1.5 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800"
                   title="Inspiração (pelo nariz)"
                 >
-                  <span className="text-[10px] text-slate-400 block truncate">Inspire</span>
+                  <span className="text-[10px] text-stone-400 block truncate">Inspire</span>
                   <div className="flex items-center justify-center gap-0.5 mt-0.5">
                     <button
                       type="button"
                       title="Diminuir 1s da inspiração"
                       onClick={() => handleUpdateSingleStage('inhaleDuration', Math.max(2, currentSettings.inhaleDuration - 1))}
-                      className="w-5 h-5 rounded bg-petrol-800 hover:bg-petrol-700 text-slate-200 text-xs font-bold flex items-center justify-center"
+                      className="w-5 h-5 rounded bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-bold flex items-center justify-center"
                     >
                       -
                     </button>
-                    <span className="font-semibold text-sand-200 tabular-nums w-4 text-center">
+                    <span className="font-semibold text-stone-800 dark:text-stone-200 tabular-nums w-4 text-center">
                       {currentSettings.inhaleDuration}
                     </span>
                     <button
                       type="button"
                       title="Aumentar 1s da inspiração"
                       onClick={() => handleUpdateSingleStage('inhaleDuration', Math.min(10, currentSettings.inhaleDuration + 1))}
-                      className="w-5 h-5 rounded bg-petrol-800 hover:bg-petrol-700 text-slate-200 text-xs font-bold flex items-center justify-center"
+                      className="w-5 h-5 rounded bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-bold flex items-center justify-center"
                     >
                       +
                     </button>
@@ -469,27 +469,27 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
 
                 {/* Hold */}
                 <div 
-                  className="p-1.5 rounded-xl bg-petrol-950/70 border border-petrol-800/80"
+                  className="p-1.5 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800"
                   title="Suspensão com pulmões cheios"
                 >
-                  <span className="text-[10px] text-slate-400 block truncate">Suspenda</span>
+                  <span className="text-[10px] text-stone-400 block truncate">Suspenda</span>
                   <div className="flex items-center justify-center gap-0.5 mt-0.5">
                     <button
                       type="button"
                       title="Diminuir 1s da suspensão"
                       onClick={() => handleUpdateSingleStage('holdDuration', Math.max(0, currentSettings.holdDuration - 1))}
-                      className="w-5 h-5 rounded bg-petrol-800 hover:bg-petrol-700 text-slate-200 text-xs font-bold flex items-center justify-center"
+                      className="w-5 h-5 rounded bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-bold flex items-center justify-center"
                     >
                       -
                     </button>
-                    <span className="font-semibold text-sand-200 tabular-nums w-4 text-center">
+                    <span className="font-semibold text-stone-800 dark:text-stone-200 tabular-nums w-4 text-center">
                       {currentSettings.holdDuration}
                     </span>
                     <button
                       type="button"
                       title="Aumentar 1s da suspensão"
                       onClick={() => handleUpdateSingleStage('holdDuration', Math.min(8, currentSettings.holdDuration + 1))}
-                      className="w-5 h-5 rounded bg-petrol-800 hover:bg-petrol-700 text-slate-200 text-xs font-bold flex items-center justify-center"
+                      className="w-5 h-5 rounded bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-bold flex items-center justify-center"
                     >
                       +
                     </button>
@@ -498,27 +498,27 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
 
                 {/* Exhale */}
                 <div 
-                  className="p-1.5 rounded-xl bg-petrol-950/70 border border-petrol-800/80"
+                  className="p-1.5 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800"
                   title="Expiração lenta pela boca"
                 >
-                  <span className="text-[10px] text-slate-400 block truncate">Expire</span>
+                  <span className="text-[10px] text-stone-400 block truncate">Expire</span>
                   <div className="flex items-center justify-center gap-0.5 mt-0.5">
                     <button
                       type="button"
                       title="Diminuir 1s da expiração"
                       onClick={() => handleUpdateSingleStage('exhaleDuration', Math.max(3, currentSettings.exhaleDuration - 1))}
-                      className="w-5 h-5 rounded bg-petrol-800 hover:bg-petrol-700 text-slate-200 text-xs font-bold flex items-center justify-center"
+                      className="w-5 h-5 rounded bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-bold flex items-center justify-center"
                     >
                       -
                     </button>
-                    <span className="font-semibold text-sand-200 tabular-nums w-4 text-center">
+                    <span className="font-semibold text-stone-800 dark:text-stone-200 tabular-nums w-4 text-center">
                       {currentSettings.exhaleDuration}
                     </span>
                     <button
                       type="button"
                       title="Aumentar 1s da expiração"
                       onClick={() => handleUpdateSingleStage('exhaleDuration', Math.min(15, currentSettings.exhaleDuration + 1))}
-                      className="w-5 h-5 rounded bg-petrol-800 hover:bg-petrol-700 text-slate-200 text-xs font-bold flex items-center justify-center"
+                      className="w-5 h-5 rounded bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-bold flex items-center justify-center"
                     >
                       +
                     </button>
@@ -527,27 +527,27 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
 
                 {/* Post-Exhale Hold */}
                 <div 
-                  className="p-1.5 rounded-xl bg-petrol-950/70 border border-petrol-800/80"
+                  className="p-1.5 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800"
                   title="Suspensão com pulmões vazios"
                 >
-                  <span className="text-[10px] text-slate-400 block truncate">Suspenda</span>
+                  <span className="text-[10px] text-stone-400 block truncate">Suspenda</span>
                   <div className="flex items-center justify-center gap-0.5 mt-0.5">
                     <button
                       type="button"
                       title="Diminuir 1s da suspensão final"
                       onClick={() => handleUpdateSingleStage('holdPostExhaleDuration', Math.max(0, (currentSettings.holdPostExhaleDuration || 0) - 1))}
-                      className="w-5 h-5 rounded bg-petrol-800 hover:bg-petrol-700 text-slate-200 text-xs font-bold flex items-center justify-center"
+                      className="w-5 h-5 rounded bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-bold flex items-center justify-center"
                     >
                       -
                     </button>
-                    <span className="font-semibold text-sand-200 tabular-nums w-4 text-center">
+                    <span className="font-semibold text-stone-800 dark:text-stone-200 tabular-nums w-4 text-center">
                       {currentSettings.holdPostExhaleDuration || 0}
                     </span>
                     <button
                       type="button"
                       title="Aumentar 1s da suspensão final"
                       onClick={() => handleUpdateSingleStage('holdPostExhaleDuration', Math.min(8, (currentSettings.holdPostExhaleDuration || 0) + 1))}
-                      className="w-5 h-5 rounded bg-petrol-800 hover:bg-petrol-700 text-slate-200 text-xs font-bold flex items-center justify-center"
+                      className="w-5 h-5 rounded bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 text-xs font-bold flex items-center justify-center"
                     >
                       +
                     </button>
@@ -559,20 +559,20 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
         </AnimatePresence>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3 pt-1">
+        <div className="grid grid-cols-2 gap-2.5 pt-1">
           <button
             onClick={() => setIsActive(!isActive)}
             title={isActive ? 'Pausar o exercício temporariamente' : 'Retomar o exercício'}
-            className="py-3.5 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-200 text-sm font-semibold flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
+            className="py-3 px-4 rounded-2xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-100 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border border-stone-200 dark:border-stone-700 transition-all active:scale-[0.98]"
           >
             {isActive ? (
               <>
-                <Pause className="w-4 h-4 text-sand-300" />
+                <Pause className="w-4 h-4 text-amber-700 dark:text-amber-400" />
                 <span>Pausar</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 text-sage-300" />
+                <Play className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                 <span>Retomar</span>
               </>
             )}
@@ -581,9 +581,9 @@ export const BreathingEngine: React.FC<BreathingEngineProps> = ({ onComplete, se
           <button
             onClick={() => onComplete(Math.max(totalElapsedTime, 10))}
             title="Finalizar o exercício agora e ir para a reavaliação"
-            className="py-3.5 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-200 text-sm font-semibold flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
+            className="py-3 px-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm"
           >
-            <CheckCircle2 className="w-4 h-4 text-sage-300" />
+            <CheckCircle2 className="w-4 h-4" />
             <span>Concluir</span>
           </button>
         </div>

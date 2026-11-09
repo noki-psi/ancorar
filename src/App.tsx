@@ -8,6 +8,8 @@ import { StepCompassion } from './components/StepCompassion';
 import { BreathingEngine } from './components/BreathingEngine';
 import { StepPostCheckout } from './components/StepPostCheckout';
 import { StepSummary } from './components/StepSummary';
+import { AboutModal } from './components/AboutModal';
+import { NavigationMenu } from './components/NavigationMenu';
 import { Step } from './types';
 import { getAnonymousUserId, saveSession, isSupabaseConfigured, checkSupabaseConnection, syncOfflineSessions } from './lib/supabase';
 import { getBreathingSettings, saveBreathingSettings, BreathingSettings, getPatternRaw, formatPatternDisplay } from './lib/settings';
@@ -23,7 +25,22 @@ export function App() {
   const [sessionDuration, setSessionDuration] = useState<number>(() => getBreathingSettings().totalDurationSeconds);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [isPersonalOpen, setIsPersonalOpen] = useState<boolean>(false);
+  const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isOffline, setIsOffline] = useState<boolean>(!isSupabaseConfigured);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('ancorar_theme') as 'light' | 'dark') || 'light';
+  });
+
+  // Apply theme to html document
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('ancorar_theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     getAnonymousUserId();
@@ -82,13 +99,19 @@ export function App() {
     setCurrentStep('onboarding');
   };
 
+  // Direct practice start
+  const handleStartDirectPractice = () => {
+    setSessionDuration(breathingSettings.totalDurationSeconds);
+    setCurrentStep('breathing');
+  };
+
   // Step indicator helper
   const getStepProgress = () => {
     switch (currentStep) {
       case 'onboarding':
-        return { current: 1, total: 4, label: 'Introdução' };
+        return undefined; // Clean home without progress clutter
       case 'pre-checkin':
-        return { current: 2, total: 4, label: 'Como você está' };
+        return { current: 1, total: 4, label: 'Autoavaliação' };
       case 'compassion':
         return { current: 2, total: 4, label: 'Acolhimento' };
       case 'breathing':
@@ -96,22 +119,18 @@ export function App() {
       case 'post-checkout':
         return { current: 4, total: 4, label: 'Reavaliação' };
       case 'summary':
-        return { current: 4, total: 4, label: 'Conclusão' };
+        return { current: 4, total: 4, label: 'Resultado' };
       default:
         return undefined;
     }
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-[#090f15] text-slate-100 relative selection:bg-sage-400/20 selection:text-sand-200">
-      {/* Discreet organic ambient gradient */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md h-64 bg-petrol-800/20 blur-3xl pointer-events-none -z-10" />
-
-      {/* Header */}
+    <div className="min-h-[100dvh] flex flex-col bg-[#fbfaf8] dark:bg-[#0b1319] text-stone-900 dark:text-stone-100 transition-colors selection:bg-emerald-500/20 selection:text-emerald-900 dark:selection:text-emerald-200">
+      {/* Minimal Header */}
       <Header 
-        onOpenAdmin={() => setIsAdminOpen(true)}
-        onOpenPersonal={() => setIsPersonalOpen(true)}
-        isOnline={!isOffline} 
+        onOpenMenu={() => setIsMenuOpen(true)}
+        onGoHome={handleGoHome}
         stepProgress={getStepProgress()} 
       />
 
@@ -128,6 +147,7 @@ export function App() {
               value={preTension}
               onChange={setPreTension}
               onNext={() => setCurrentStep('compassion')}
+              onBack={handleGoHome}
             />
           )}
 
@@ -177,11 +197,32 @@ export function App() {
         </AnimatePresence>
       </main>
 
-      {/* Footer - hidden during breathing practice for zero distractions */}
+      {/* Minimal Footer */}
       <Footer 
-        onOpenAdmin={() => setIsAdminOpen(true)}
-        onOpenPersonal={() => setIsPersonalOpen(true)}
+        onOpenAbout={() => setIsAboutOpen(true)}
         hideDuringPractice={currentStep === 'breathing'} 
+      />
+
+      {/* Hamburger Navigation Menu */}
+      <NavigationMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onGoHome={handleGoHome}
+        onStartPractice={handleStartDirectPractice}
+        onOpenAbout={() => setIsAboutOpen(true)}
+        onOpenPersonal={() => setIsPersonalOpen(true)}
+        onOpenAdmin={() => setIsAdminOpen(true)}
+        theme={theme}
+        onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+      />
+
+      {/* Dedicated About & Institutional Modal */}
+      <AboutModal
+        isOpen={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
+        isOnline={!isOffline}
+        onOpenPersonal={() => setIsPersonalOpen(true)}
+        onOpenAdmin={() => setIsAdminOpen(true)}
       />
 
       {/* Personal Dashboard Drawer */}
@@ -189,10 +230,7 @@ export function App() {
         <PersonalDrawer 
           isOpen={isPersonalOpen} 
           onClose={() => setIsPersonalOpen(false)} 
-          onStartSession={() => {
-            setSessionDuration(breathingSettings.totalDurationSeconds);
-            setCurrentStep('breathing');
-          }}
+          onStartSession={handleStartDirectPractice}
         />
       </Suspense>
 

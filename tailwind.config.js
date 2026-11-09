@@ -1,13 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '375px',
+      },
       colors: {
-        background: '#090f15',
+        background: '#fbfaf8',
         petrol: {
           950: '#070d12',
           900: '#0b161e',

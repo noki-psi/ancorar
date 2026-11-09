@@ -1,11 +1,10 @@
 import React from 'react';
-import { BookOpen, PhoneCall, User } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface HeaderProps {
-  onOpenAdmin: () => void;
-  onOpenPersonal: () => void;
-  isOnline: boolean;
+  onOpenMenu: () => void;
+  onGoHome: () => void;
   stepProgress?: {
     current: number;
     total: number;
@@ -13,73 +12,50 @@ interface HeaderProps {
   };
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAdmin, onOpenPersonal, isOnline, stepProgress }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenMenu, onGoHome, stepProgress }) => {
   return (
-    <header className="w-full pt-3 pb-2.5 px-4 backdrop-blur-md bg-petrol-950/80 border-b border-petrol-800/60 sticky top-0 z-40 transition-all">
+    <header className="w-full pt-3 pb-2.5 px-4 backdrop-blur-md bg-white/85 dark:bg-[#121920]/85 border-b border-stone-200/80 dark:border-stone-800/80 sticky top-0 z-40 transition-colors">
       <div className="max-w-md mx-auto flex items-center justify-between">
-        {/* Brand */}
-        <div className="flex items-center gap-2.5">
-          <Logo size={32} />
+        {/* Brand - Clickable to return to Home at any time */}
+        <button
+          onClick={onGoHome}
+          className="flex items-center gap-2.5 text-left group focus:outline-none"
+          title="Voltar para o início"
+        >
+          <Logo size={30} />
           <div>
-            <h1 className="text-base font-bold tracking-tight text-sand-200">
+            <h1 className="text-base font-bold tracking-tight text-stone-900 dark:text-stone-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
               Ancorar
             </h1>
-            <p className="text-xs text-slate-300 font-medium leading-tight">
-              Espaço de Pausa e Respiração
+            <p className="text-[11px] text-stone-500 dark:text-stone-400 font-medium leading-none">
+              Pausa e Respiração
             </p>
           </div>
-        </div>
+        </button>
 
-        {/* Status + Actions */}
+        {/* Minimal Right: Hamburger Menu for general navigation */}
         <div className="flex items-center gap-2">
-          {/* Online badge */}
-          <div 
-            title={isOnline ? "Conexão ativa: dados anonimizados da pesquisa são enviados com segurança" : "Modo offline: os dados são salvos apenas no seu aparelho"}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border border-petrol-700/80 bg-petrol-900/60 text-slate-200 cursor-help"
-          >
-            <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-sage-400 animate-pulse' : 'bg-sand-400'}`} />
-            <span>{isOnline ? 'Online' : 'Offline'}</span>
-          </div>
+          {stepProgress && (
+            <span className="hidden xs:inline-block text-[11px] font-semibold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800/80 px-2 py-0.5 rounded-full">
+              {stepProgress.current}/{stepProgress.total}
+            </span>
+          )}
 
-          {/* Quick CVV */}
-          <a
-            href="tel:188"
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition-colors"
-            title="Ligue 188 gratuitamente para o Centro de Valorização da Vida (apoio emocional 24h)"
-          >
-            <PhoneCall className="w-3 h-3" />
-            <span>188</span>
-          </a>
-
-          {/* Personal Drawer button */}
           <button
-            onClick={onOpenPersonal}
-            aria-label="Meu Histórico Pessoal"
-            title="Abrir meu histórico pessoal privado (salvo neste aparelho)"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-sand-200 transition-colors"
+            onClick={onOpenMenu}
+            aria-label="Abrir menu de navegação"
+            title="Menu de navegação e opções"
+            className="p-2 rounded-xl text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
           >
-            <User className="w-4 h-4" />
-          </button>
-
-          {/* Admin / Research drawer */}
-          <button
-            onClick={onOpenAdmin}
-            aria-label="Painel da Pesquisa"
-            title="Abrir painel analítico da pesquisa"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-sand-200 transition-colors"
-          >
-            <BookOpen className="w-4 h-4" />
+            <Menu className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* Progress indicator when active */}
+      {/* Discreet step indicator bar when active */}
       {stepProgress && (
-        <div 
-          className="max-w-md mx-auto mt-2 pt-1.5 border-t border-petrol-800/40 flex items-center justify-between text-xs text-slate-300 font-medium"
-          title={`Etapa atual: ${stepProgress.label} (${stepProgress.current} de ${stepProgress.total})`}
-        >
-          <span className="font-semibold text-slate-200">{stepProgress.label}</span>
+        <div className="max-w-md mx-auto mt-2 pt-1.5 border-t border-stone-100 dark:border-stone-800/60 flex items-center justify-between text-[11px] text-stone-500 dark:text-stone-400 font-medium">
+          <span className="font-semibold text-stone-700 dark:text-stone-200">{stepProgress.label}</span>
           <span>Etapa {stepProgress.current} de {stepProgress.total}</span>
         </div>
       )}

@@ -35,10 +35,10 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
     if (delta > 0) {
       try {
         confetti({
-          particleCount: 45,
-          spread: 50,
+          particleCount: 40,
+          spread: 45,
           origin: { y: 0.65 },
-          colors: ['#7fae9b', '#a3c9b8', '#e5d7b5']
+          colors: ['#2d604f', '#5ca187', '#dcd3c4']
         });
       } catch {
         // Fallback
@@ -51,25 +51,25 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
       return {
         title: 'Pausa bem aproveitada',
         desc: `Sua tensão percebida reduziu em ${delta} níveis (de ${preTension} para ${postTension}). O ritmo respiratório mais lento pode ajudar seu corpo a reencontrar estabilidade.`,
-        badgeColor: 'bg-sage-500/10 text-sage-300 border-sage-500/30'
+        badgeColor: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
       };
     } else if (delta === 1) {
       return {
         title: 'Sensação de alívio',
         desc: `Você reduziu 1 nível de tensão (de ${preTension} para ${postTension}). Momentos de desaceleração favorecem o equilíbrio antes da avaliação.`,
-        badgeColor: 'bg-sage-500/10 text-sage-300 border-sage-500/30'
+        badgeColor: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
       };
     } else if (delta === 0) {
       return {
         title: 'Estabilidade acolhida',
         desc: `Seu nível se manteve em ${preTension}. A pausa com respiração lenta pode atuar como um amortecedor contra a elevação da ansiedade.`,
-        badgeColor: 'bg-sand-400/10 text-sand-300 border-sand-400/30'
+        badgeColor: 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700'
       };
     } else {
       return {
         title: 'Acolhimento da sensação',
         desc: `Voltar a atenção ao corpo às vezes torna tensões pré-existentes mais perceptíveis. Respeite seu tempo e ritmo interno.`,
-        badgeColor: 'bg-sand-400/10 text-sand-300 border-sand-400/30'
+        badgeColor: 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700'
       };
     }
   };
@@ -83,24 +83,24 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-      className="flex flex-col flex-1 justify-center space-y-4 py-3"
+      transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+      className="flex flex-col flex-1 justify-center space-y-4 py-3 max-w-md mx-auto w-full select-none"
     >
       {/* Research Sync Badge */}
       <div 
-        className="flex items-center justify-between text-xs sm:text-sm px-4 py-2.5 rounded-xl bg-petrol-900/60 border border-petrol-800/80"
-        title={isOffline ? "Dados armazenados localmente no seu navegador para privacidade" : "Dados enviados anonimamente para a base da pesquisa"}
+        className="flex items-center justify-between text-xs px-4 py-2.5 rounded-2xl bg-white dark:bg-[#151c22] border border-stone-200 dark:border-stone-800 shadow-sm"
+        title={isOffline ? "Dados armazenados localmente no seu aparelho para privacidade" : "Dados enviados anonimamente para a base da pesquisa"}
       >
-        <span className="text-slate-300 font-medium">Status da sessão:</span>
-        <span className={`inline-flex items-center gap-1.5 font-semibold ${isOffline ? 'text-sand-300' : 'text-sage-300'}`}>
+        <span className="text-stone-500 dark:text-stone-400 font-medium">Status da sessão:</span>
+        <span className={`inline-flex items-center gap-1.5 font-semibold ${isOffline ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
           {isOffline ? (
             <>
-              <Database className="w-4 h-4" />
+              <Database className="w-3.5 h-3.5" />
               <span>Salvo no aparelho (offline)</span>
             </>
           ) : (
             <>
-              <Send className="w-4 h-4 text-sage-300 -rotate-12" />
+              <Send className="w-3.5 h-3.5 -rotate-12" />
               <span>Dados Enviados</span>
             </>
           )}
@@ -108,72 +108,72 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
       </div>
 
       {/* Main Impact Card */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-petrol-900/70 border border-petrol-800/90 space-y-4 text-center relative overflow-hidden shadow-lg">
-        <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border ${feedback.badgeColor}`}>
-          <Award className="w-4 h-4 text-sage-300" />
+      <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#151c22] border border-stone-200 dark:border-stone-800 space-y-4 text-center relative overflow-hidden shadow-sm">
+        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${feedback.badgeColor}`}>
+          <Award className="w-3.5 h-3.5" />
           <span>{feedback.title}</span>
         </div>
 
         {/* Delta Visualizer with Standardized Emojis */}
-        <div className="flex items-center justify-center gap-5 py-2">
+        <div className="flex items-center justify-center gap-6 py-2">
           <div className="text-center" title="Nível avaliado antes de começar a respirar">
-            <span className="text-xs text-slate-400 block uppercase font-semibold tracking-wider">Antes</span>
-            <div className="text-3xl sm:text-4xl font-bold text-slate-100 mt-1 flex items-center justify-center gap-1.5">
+            <span className="text-[11px] text-stone-400 dark:text-stone-500 block uppercase font-bold tracking-wider">Antes</span>
+            <div className="text-3xl font-extrabold text-stone-800 dark:text-stone-100 mt-1 flex items-center justify-center gap-1.5">
               <span>{getTensionEmoji(preTension)}</span>
               <span>{preTension}</span>
             </div>
-            <span className="text-xs sm:text-sm text-slate-300 mt-0.5 block">{preInfo?.label}</span>
+            <span className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 block">{preInfo?.label}</span>
           </div>
 
           <div className="flex flex-col items-center justify-center px-1">
-            <TrendingDown className={`w-7 h-7 ${delta > 0 ? 'text-sage-300' : 'text-slate-500'}`} />
+            <TrendingDown className={`w-6 h-6 ${delta > 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-stone-400'}`} />
             {delta > 0 && (
-              <span className="text-xs font-semibold text-sage-300 mt-0.5" title="Redução da tensão percebida">
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mt-0.5" title="Redução da tensão percebida">
                 -{delta} {delta === 1 ? 'nível' : 'níveis'}
               </span>
             )}
           </div>
 
           <div className="text-center" title="Nível reavaliado após a respiração">
-            <span className="text-xs text-slate-400 block uppercase font-semibold tracking-wider">Depois</span>
-            <div className="text-3xl sm:text-4xl font-bold text-sand-200 mt-1 flex items-center justify-center gap-1.5">
+            <span className="text-[11px] text-stone-400 dark:text-stone-500 block uppercase font-bold tracking-wider">Depois</span>
+            <div className="text-3xl font-extrabold text-stone-900 dark:text-stone-100 mt-1 flex items-center justify-center gap-1.5">
               <span>{getTensionEmoji(postTension)}</span>
               <span>{postTension}</span>
             </div>
-            <span className="text-xs sm:text-sm text-slate-300 mt-0.5 block">{postInfo?.label}</span>
+            <span className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 block">{postInfo?.label}</span>
           </div>
         </div>
 
-        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+        <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed">
           {feedback.desc}
         </p>
 
         {/* Practice Details */}
         <div 
-          className="pt-2 border-t border-petrol-800/80 flex items-center justify-between text-xs sm:text-sm text-slate-300"
+          className="pt-2.5 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400"
           title="Tempo executado versus tempo previsto, e ritmo respiratório praticado"
         >
           <span>
-            Duração: <strong className="text-sand-200 font-semibold">{Math.round(durationSeconds)}s</strong> / {targetDurationSeconds}s
+            Duração: <strong className="text-stone-800 dark:text-stone-200 font-semibold">{Math.round(durationSeconds)}s</strong> / {targetDurationSeconds}s
           </span>
-          <span className="font-mono text-xs text-sand-300 bg-petrol-950 px-2 py-0.5 rounded border border-petrol-800">
+          <span className="font-mono text-[11px] text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded border border-stone-200 dark:border-stone-700">
             Ritmo: {formatPatternDisplay(breathingPattern)}
           </span>
         </div>
       </div>
 
       {/* Survey CTA */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-petrol-900/50 border border-petrol-800 space-y-3">
+      <div className="p-4 rounded-2xl bg-stone-50 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800 space-y-3">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-petrol-800 text-sage-300 shrink-0 mt-0.5">
-            <Sparkles className="w-5 h-5" />
+          <div className="p-2 rounded-xl bg-white dark:bg-stone-800 text-emerald-700 dark:text-emerald-400 shrink-0 shadow-xs">
+            <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-sand-200">
-              Colabore com a pesquisa acadêmica
+            <h4 className="text-xs sm:text-sm font-bold text-stone-900 dark:text-stone-100">
+              Colabore com a pesquisa da extensão
             </h4>
-            <p className="text-xs sm:text-sm text-slate-300 mt-0.5 leading-relaxed">
-              Sua avaliação anônima ajuda no aprimoramento contínuo das ferramentas de apoio ao estudante.
+            <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 leading-relaxed">
+              Sua avaliação anônima apoia o aprimoramento contínuo das ferramentas de cuidado do UNI-RN.
             </p>
           </div>
         </div>
@@ -182,11 +182,11 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
           href={surveyUrl}
           target="_blank"
           rel="noopener noreferrer"
-          title="Abrir formulário breve de pesquisa acadêmica em nova aba"
-          className="w-full py-3 px-4 rounded-xl bg-petrol-800 hover:bg-petrol-700 text-sand-200 border border-petrol-700/60 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
+          title="Abrir questionário acadêmico breve"
+          className="w-full py-2.5 px-4 rounded-xl bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-100 border border-stone-300 dark:border-stone-700 font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-xs"
         >
           <span>Responder questionário breve</span>
-          <ExternalLink className="w-4 h-4" />
+          <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>
 
@@ -195,10 +195,10 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
         {/* Restart directly to breathing */}
         <button
           onClick={onRestart}
-          title="Iniciar novo ciclo de respiração imediatamente"
-          className="w-full py-4 px-6 rounded-2xl bg-sage-400 hover:bg-sage-300 text-petrol-950 font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md"
+          title="Iniciar nova sessão de respiração imediatamente"
+          className="w-full py-4 px-6 rounded-2xl bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm"
         >
-          <RotateCcw className="w-5 h-5 text-petrol-950" />
+          <RotateCcw className="w-5 h-5 text-white" />
           <span>Fazer outra sessão de respiração</span>
         </button>
 
@@ -206,10 +206,10 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
           {/* Go Home / Back to start */}
           <button
             onClick={onGoHome}
-            title="Voltar para a tela inicial de acolhimento"
-            className="py-3 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-300 hover:text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
+            title="Voltar para a tela inicial"
+            className="py-3 px-3 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-semibold text-xs flex items-center justify-center gap-1.5 border border-stone-200 dark:border-stone-700 transition-all active:scale-[0.98]"
           >
-            <Home className="w-4 h-4 text-sage-300" />
+            <Home className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
             <span>Voltar ao início</span>
           </button>
 
@@ -217,9 +217,9 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
           <button
             onClick={onOpenPersonal}
             title="Abrir meu histórico pessoal privado salvo neste aparelho"
-            className="py-3 px-4 rounded-xl bg-petrol-900/80 hover:bg-petrol-800 text-slate-300 hover:text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-petrol-800 transition-all active:scale-[0.98]"
+            className="py-3 px-3 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-semibold text-xs flex items-center justify-center gap-1.5 border border-stone-200 dark:border-stone-700 transition-all active:scale-[0.98]"
           >
-            <User className="w-4 h-4 text-sage-300" />
+            <User className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
             <span>Meu Histórico</span>
           </button>
         </div>

@@ -94,7 +94,7 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50"
           />
 
           {/* Drawer Sheet */}
@@ -103,22 +103,22 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 max-h-[90vh] bg-slate-950 border-t border-slate-800 rounded-t-3xl z-50 flex flex-col shadow-2xl max-w-xl mx-auto overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 max-h-[90vh] bg-white dark:bg-[#121920] border-t border-stone-200 dark:border-stone-800 rounded-t-3xl z-50 flex flex-col shadow-2xl max-w-xl mx-auto overflow-hidden text-stone-900 dark:text-stone-100"
           >
             {/* Header */}
-            <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
+            <div className="p-4 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-petrol-900 border border-petrol-800 flex items-center justify-center text-sage-300">
+                <div className="w-10 h-10 rounded-2xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-emerald-700 dark:text-emerald-400">
                   <User className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold flex items-center gap-2">
                     <span>Meu Histórico Pessoal</span>
-                    <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                    <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                       Privado
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
                     Dados individuais salvos exclusivamente na memória deste aparelho
                   </p>
                 </div>
@@ -127,7 +127,7 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
               <button
                 onClick={onClose}
                 title="Fechar meu histórico"
-                className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors"
+                className="p-2 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -138,40 +138,40 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
               {/* Personal Metrics Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div 
-                  className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-center"
+                  className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 text-center"
                   title="Total de práticas de respiração que você concluiu neste aparelho"
                 >
-                  <div className="text-xs uppercase font-bold text-slate-400">Suas Sessões</div>
-                  <div className="text-2xl sm:text-3xl font-black text-sage-300 mt-1">{totalSessions}</div>
+                  <div className="text-[11px] uppercase font-bold text-stone-400">Suas Sessões</div>
+                  <div className="text-2xl font-extrabold text-stone-900 dark:text-stone-100 mt-1">{totalSessions}</div>
                 </div>
 
                 <div 
-                  className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-center"
+                  className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 text-center"
                   title="Tempo total acumulado de respiração consciente"
                 >
-                  <div className="text-xs uppercase font-bold text-slate-400">Tempo Total</div>
-                  <div className="text-lg sm:text-xl font-bold text-sand-200 mt-2 truncate">
+                  <div className="text-[11px] uppercase font-bold text-stone-400">Tempo Total</div>
+                  <div className="text-base font-bold text-stone-800 dark:text-stone-200 mt-2 truncate">
                     {formatDurationLabel(totalSeconds)}
                   </div>
                 </div>
 
                 <div 
-                  className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-center"
+                  className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 text-center"
                   title="Média de redução da tensão entre antes e depois das práticas"
                 >
-                  <div className="text-xs uppercase font-bold text-slate-400">Alívio Médio</div>
-                  <div className="text-lg sm:text-xl font-bold text-emerald-300 mt-2 flex items-center justify-center gap-1">
+                  <div className="text-[11px] uppercase font-bold text-stone-400">Alívio Médio</div>
+                  <div className="text-base font-bold text-emerald-700 dark:text-emerald-400 mt-2 flex items-center justify-center gap-1">
                     <TrendingDown className="w-4 h-4" />
                     <span>{Number(avgDelta) > 0 ? `-${avgDelta}` : avgDelta}</span>
                   </div>
                 </div>
 
                 <div 
-                  className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-center"
+                  className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 text-center"
                   title="O ritmo respiratório que você mais utilizou"
                 >
-                  <div className="text-xs uppercase font-bold text-slate-400">Ritmo Favorito</div>
-                  <div className="text-base sm:text-lg font-mono font-bold text-cyan-300 mt-2">
+                  <div className="text-[11px] uppercase font-bold text-stone-400">Ritmo Favorito</div>
+                  <div className="text-base font-mono font-bold text-stone-800 dark:text-stone-200 mt-2">
                     {formatPatternDisplay(favoritePattern)}
                   </div>
                 </div>
@@ -186,9 +186,9 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
                       onStartSession();
                     }}
                     title="Iniciar nova prática de respiração agora"
-                    className="py-3 px-4 rounded-xl bg-sage-400 hover:bg-sage-300 text-petrol-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm"
+                    className="py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm"
                   >
-                    <RotateCcw className="w-4 h-4 text-petrol-950" />
+                    <RotateCcw className="w-4 h-4" />
                     <span>Iniciar Nova Sessão</span>
                   </button>
                 )}
@@ -197,10 +197,10 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
                   <button
                     onClick={handleExportCSV}
                     title="Baixar planilha CSV com o histórico das suas sessões"
-                    className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-slate-800 transition-all active:scale-[0.98]"
+                    className="py-3 px-4 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-stone-200 dark:border-stone-700 transition-all active:scale-[0.98]"
                   >
-                    <FileSpreadsheet className="w-4 h-4 text-sage-300" />
-                    <span>Exportar Meu Histórico (CSV)</span>
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+                    <span>Exportar Histórico (CSV)</span>
                   </button>
                 )}
               </div>
@@ -208,7 +208,7 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
               {/* Sessions List */}
               <div className="space-y-2 pt-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-400">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400">
                     Suas Práticas Realizadas ({sessions.length})
                   </h4>
 
@@ -218,7 +218,7 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
                       onClick={handleClear}
                       title="Excluir o histórico de sessões apenas deste dispositivo"
                       className={`text-xs flex items-center gap-1 font-medium transition-colors ${
-                        confirmClear ? 'text-rose-400 font-bold' : 'text-slate-500 hover:text-rose-400'
+                        confirmClear ? 'text-rose-600 font-bold' : 'text-stone-400 hover:text-rose-600'
                       }`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -228,7 +228,7 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
                 </div>
 
                 {sessions.length === 0 ? (
-                  <div className="p-8 text-center text-sm text-slate-400 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 space-y-3">
+                  <div className="p-8 text-center text-xs text-stone-400 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-dashed border-stone-200 dark:border-stone-800 space-y-3">
                     <p>Nenhuma sessão realizada ainda neste aparelho.</p>
                     {onStartSession && (
                       <button
@@ -236,15 +236,15 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
                           onClose();
                           onStartSession();
                         }}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sage-400 text-petrol-950 font-bold text-xs hover:bg-sage-300 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 text-white font-bold text-xs hover:bg-emerald-800 transition-colors"
                       >
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>Fazer minha primeira sessão</span>
+                        <span>Fazer primeira sessão</span>
                       </button>
                     )}
                   </div>
                 ) : (
-                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                     {sessions.map((s, idx) => {
                       const delta = s.pre_tension - s.post_tension;
                       const pattern = s.breathing_pattern ? formatPatternDisplay(s.breathing_pattern) : '3:2:6';
@@ -261,37 +261,37 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
                       return (
                         <div
                           key={s.id || idx}
-                          className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800/90 flex items-center justify-between text-xs sm:text-sm"
+                          className="p-3 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 flex items-center justify-between text-xs"
                         >
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-slate-300">
+                              <span className="font-semibold text-stone-700 dark:text-stone-300">
                                 {formattedDate}
                               </span>
-                              <span className="font-mono text-[11px] text-sand-300 bg-petrol-950 px-2 py-0.5 rounded border border-petrol-800">
-                                Ritmo {pattern}
+                              <span className="font-mono text-[10px] text-stone-600 dark:text-stone-400 bg-stone-200 dark:bg-stone-800 px-1.5 py-0.5 rounded">
+                                {pattern}
                               </span>
                             </div>
 
-                            <div className="text-xs sm:text-sm text-slate-300 flex items-center gap-2">
+                            <div className="text-stone-600 dark:text-stone-400 flex items-center gap-2">
                               <span>
                                 {getTensionEmoji(s.pre_tension)} <strong>{s.pre_tension}</strong>
-                                <span className="mx-1 text-slate-500">→</span>
+                                <span className="mx-1 text-stone-400">→</span>
                                 {getTensionEmoji(s.post_tension)} <strong>{s.post_tension}</strong>
                               </span>
-                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                delta > 0 ? 'bg-emerald-500/20 text-emerald-300' : delta === 0 ? 'bg-slate-800 text-slate-400' : 'bg-rose-500/20 text-rose-300'
+                              <span className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
+                                delta > 0 ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : delta === 0 ? 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400' : 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
                               }`}>
-                                {delta > 0 ? `-${delta} ${delta === 1 ? 'nível' : 'níveis'}` : delta === 0 ? 'Estável' : `+${Math.abs(delta)}`}
+                                {delta > 0 ? `-${delta}` : delta === 0 ? 'Estável' : `+${Math.abs(delta)}`}
                               </span>
                             </div>
                           </div>
 
-                          <div className="text-right text-xs text-slate-300">
+                          <div className="text-right text-stone-600 dark:text-stone-400">
                             <div>
-                              Duração: <strong className="text-sand-200">{s.duration_seconds}s</strong> / {targetDur}s
+                              Duração: <strong className="text-stone-900 dark:text-stone-100">{s.duration_seconds}s</strong> / {targetDur}s
                             </div>
-                            <div className="text-[11px] text-slate-400 mt-0.5">
+                            <div className="text-[11px] text-stone-400 mt-0.5">
                               {Math.round((s.duration_seconds / targetDur) * 100)}% concluído
                             </div>
                           </div>
