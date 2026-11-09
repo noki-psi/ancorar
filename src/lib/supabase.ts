@@ -1,34 +1,40 @@
 import { createClient } from '@supabase/supabase-js';
 import { SessionRecord } from '../types';
 
-// Fallback direct credentials for public anon client in frontend
-const DEFAULT_SUPABASE_URL = 'https://pgwpydahkdtngghyjedd.supabase.co';
-const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_RE7Z6o13iGD3Ghjn2S6rGA_nnwFcGaq';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
-
-export const isSupabaseConfigured = Boolean(
-  supabaseUrl && 
-  supabaseAnonKey && 
-  supabaseUrl.startsWith('http') &&
-  !supabaseUrl.includes('placeholder')
-);
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const supabase = isSupabaseConfigured 
-  ? createClient(supabaseUrl, supabaseAnonKey) 
+  ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
 const USER_ID_KEY = 'ancorar_anon_user_id';
-const LOCAL_SESSIONS_KEY = 'ancorar_offline_sessions';
+const LOCAL_SESSIONS_KEY = 'ancorar_local_sessions';
 
 export function getAnonymousUserId(): string {
-  let userId = localStorage.getItem(USER_ID_KEY);
-  if (!userId) {
-    userId = 'anon_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now().toString(36);
-    localStorage.setItem(USER_ID_KEY, userId);
+  try {
+    let id = localStorage.getItem(USER_ID_KEY);
+    if (!id) {
+      id = 'anon_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+      localStorage.setItem(USER_ID_KEY, id);
+    }
+    return id;
+  } catch (e) {
+    return 'anon_guest_' + Math.random().toString(36).substring(2, 9);
   }
-  return userId;
+}
+
+export function getLocalSessions(): SessionRecord[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_SESSIONS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load local sessions', e);
+    return [];
+  }
 }
 
 export function clearLocalSessions(): void {
@@ -39,26 +45,25 @@ export function clearLocalSessions(): void {
   }
 }
 
-export function getLocalSessions(): SessionRecord[] {
-  try {
-    const raw = localStorage.getItem(LOCAL_SESSIONS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    console.error('Failed to parse local sessions', e);
-    return [];
-  }
-}
-
 export function saveLocalSession(session: SessionRecord): void {
   try {
     const sessions = getLocalSessions();
     const id = session.id || 'local_' + Math.random().toString(36).substring(2, 9);
+    
+    // Strict data integrity: delta only computed if both pre and post exist
+    const hasBoth = session.pre_tension !== null && session.pre_tension !== undefined &&
+                    session.post_tension !== null && session.post_tension !== undefined;
+    const delta = hasBoth ? (session.pre_tension! - session.post_tension!) : null;
+
     const sessionData: SessionRecord = {
       ...session,
       id,
-      tension_delta: session.pre_tension - session.post_tension,
+      pre_tension: session.pre_tension ?? null,
+      post_tension: session.post_tension ?? null,
+      tension_delta: delta,
       created_at: session.created_at || new Date().toISOString()
     };
+
     const existingIndex = sessions.findIndex(s => s.id === id);
     if (existingIndex >= 0) {
       sessions[existingIndex] = sessionData;
@@ -146,12 +151,20 @@ export async function syncOfflineSessions(): Promise<{ syncedCount: number }> {
   return { syncedCount };
 }
 
-export async function saveSession(data: Omit<SessionRecord, 'id' | 'created_at' | 'tension_delta'>): Promise<{ success: boolean; isOffline: boolean; error?: string }> {
-  const localId = 'local_' + Math.random().toString(36).substring(2, 9);
+export async function saveSession(data: Omit<SessionRecord, 'id' | 'created_at' | 'tension_delta'> & { id?: string }): Promise<{ success: boolean; isOffline: boolean; sessionId: string; error?: string }> {
+  const localId = data.id || ('local_' + Math.random().toString(36).substring(2, 9));
+  
+  // Strict data integrity: delta only computed if both pre and post are non-null
+  const hasBoth = data.pre_tension !== null && data.pre_tension !== undefined &&
+                  data.post_tension !== null && data.post_tension !== undefined;
+  const delta = hasBoth ? (data.pre_tension! - data.post_tension!) : null;
+
   const payload: SessionRecord = {
     ...data,
     id: localId,
-    tension_delta: data.pre_tension - data.post_tension,
+    pre_tension: data.pre_tension ?? null,
+    post_tension: data.post_tension ?? null,
+    tension_delta: delta,
     created_at: new Date().toISOString(),
     synced_to_cloud: false
   };
@@ -160,7 +173,7 @@ export async function saveSession(data: Omit<SessionRecord, 'id' | 'created_at' 
   saveLocalSession(payload);
 
   if (!supabase) {
-    return { success: true, isOffline: true };
+    return { success: true, isOffline: true, sessionId: localId };
   }
 
   try {
@@ -200,14 +213,14 @@ export async function saveSession(data: Omit<SessionRecord, 'id' | 'created_at' 
     if (synced) {
       payload.synced_to_cloud = true;
       saveLocalSession(payload);
-      return { success: true, isOffline: false };
+      return { success: true, isOffline: false, sessionId: localId };
     }
 
     console.warn('Supabase sync error, stored locally:', error?.message);
-    return { success: true, isOffline: true, error: error?.message };
+    return { success: true, isOffline: true, sessionId: localId, error: error?.message };
   } catch (err: any) {
     console.warn('Network or Supabase failure, stored locally:', err?.message);
-    return { success: true, isOffline: true, error: err?.message };
+    return { success: true, isOffline: true, sessionId: localId, error: err?.message };
   }
 }
 
@@ -258,17 +271,23 @@ export async function fetchAllSessions(): Promise<{ sessions: SessionRecord[]; i
         if (!targetDur) targetDur = localMatch.target_duration_seconds;
       }
 
+      const hasBoth = item.pre_tension !== null && item.pre_tension !== undefined &&
+                      item.post_tension !== null && item.post_tension !== undefined;
+      const computedDelta = hasBoth ? (item.tension_delta ?? (item.pre_tension - item.post_tension)) : null;
+
       return {
         ...item,
         anonymous_user_id: userId,
+        pre_tension: item.pre_tension ?? null,
+        post_tension: item.post_tension ?? null,
         breathing_pattern: pattern || '326',
         target_duration_seconds: targetDur || 120,
-        tension_delta: item.tension_delta !== undefined ? item.tension_delta : (item.pre_tension - item.post_tension)
+        tension_delta: computedDelta
       };
     });
 
     // Merge remote sessions with any unsynced local sessions that have local_ prefix
-    const localOnly = localSessions.filter(s => s.id?.startsWith('local_'));
+    const localOnly = localSessions.filter(s => s.id?.startsWith('local_') && s.synced_to_cloud === false);
     const combined = [...mapped, ...localOnly];
     
     return { 

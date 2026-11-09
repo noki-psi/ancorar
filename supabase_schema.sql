@@ -1,14 +1,14 @@
 -- ==============================================================================
--- Schema do Supabase para o Projeto: Ancorar - Espaço de Pausa e Respiração
--- Projeto de Extensão I • Teorias Comportamentalistas • UNI-RN
+-- Schema do Supabase para o Projeto: Ancorar - Pausa, Respiração e Reconexão
+-- Projeto de Extensão • Painel Global • UNI-RN
 -- ==============================================================================
 
--- 1. Criação da tabela de sessões
+-- 1. Criação da tabela de sessões com escala de 0 a 10 e respostas opcionais (nullable)
 create table if not exists public.sessions (
   id uuid default gen_random_uuid() primary key,
   anonymous_user_id text not null,
-  pre_tension integer not null check (pre_tension between 1 and 5),
-  post_tension integer not null check (post_tension between 1 and 5),
+  pre_tension integer check (pre_tension is null or (pre_tension between 0 and 10)),
+  post_tension integer check (post_tension is null or (post_tension between 0 and 10)),
   tension_delta integer generated always as (pre_tension - post_tension) stored,
   duration_seconds integer default 120,
   breathing_pattern text default '326',
@@ -16,14 +16,20 @@ create table if not exists public.sessions (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Migração segura para adicionar colunas em instâncias já existentes
+-- 2. Migração segura para instâncias existentes (permite valores nulos e escala 0 a 10):
+alter table public.sessions alter column pre_tension drop not null;
+alter table public.sessions alter column post_tension drop not null;
+alter table public.sessions drop constraint if exists sessions_pre_tension_check;
+alter table public.sessions drop constraint if exists sessions_post_tension_check;
+alter table public.sessions add constraint sessions_pre_tension_check check (pre_tension is null or (pre_tension between 0 and 10));
+alter table public.sessions add constraint sessions_post_tension_check check (post_tension is null or (post_tension between 0 and 10));
 alter table public.sessions add column if not exists breathing_pattern text default '326';
 alter table public.sessions add column if not exists target_duration_seconds integer default 120;
 
--- 2. Habilitação de RLS (Row Level Security)
+-- 3. Habilitação de RLS (Row Level Security)
 alter table public.sessions enable row level security;
 
--- 3. Políticas de acesso seguro para inserção e consulta anônima da extensão
+-- 4. Políticas de acesso seguro para inserção e consulta anônima
 drop policy if exists "Allow anonymous insert" on public.sessions;
 create policy "Allow anonymous insert" 
   on public.sessions 
@@ -38,16 +44,6 @@ create policy "Allow anonymous select"
   to anon, authenticated 
   using (true);
 
--- 4. Índice para agilizar relatórios analíticos e ordenação por data
+-- 5. Índices para ordenação e relatórios
 create index if not exists idx_sessions_created_at on public.sessions (created_at desc);
 create index if not exists idx_sessions_user on public.sessions (anonymous_user_id);
-
--- ==============================================================================
--- 5. COMANDOS ÚTEIS PARA MANUTENÇÃO (Execute no SQL Editor do Supabase se desejar)
--- ==============================================================================
--- Para atualizar colunas em bancos existentes:
--- alter table public.sessions add column if not exists breathing_pattern text default '326';
--- alter table public.sessions add column if not exists target_duration_seconds integer default 120;
-
--- Para ZERAR todos os dados de testes anteriores:
--- truncate table public.sessions;

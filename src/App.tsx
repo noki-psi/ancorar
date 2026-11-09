@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { StepOnboarding } from './components/StepOnboarding';
+import { TensionScale } from './components/TensionScale';
 import { BreathingEngine } from './components/BreathingEngine';
 import { StepSummary } from './components/StepSummary';
 import { AboutModal } from './components/AboutModal';
@@ -15,7 +16,7 @@ const AdminDrawer = lazy(() => import('./components/AdminDrawer'));
 const PersonalDrawer = lazy(() => import('./components/PersonalDrawer'));
 
 export function App() {
-  const [currentStep, setCurrentStep] = useState<Step>('onboarding');
+  const [currentStep, setCurrentStep] = useState<Step>('home');
   const [preTension, setPreTension] = useState<number | null>(null);
   const [postTension, setPostTension] = useState<number | null>(null);
   const [breathingSettings, setBreathingSettings] = useState<BreathingSettings>(getBreathingSettings);
@@ -66,25 +67,32 @@ export function App() {
     saveBreathingSettings(newSettings);
   };
 
-  // Direct start: 1-click from Home straight into breathing!
-  const handleStartBreathing = () => {
-    setSessionDuration(breathingSettings.totalDurationSeconds);
-    setCurrentStep('breathing');
+  // Start flow from Home: goes to pre-evaluation (or skip directly)
+  const handleStartFromHome = () => {
+    setPreTension(null);
+    setPostTension(null);
+    setCurrentStep('pre-evaluation');
   };
 
-  // When breathing finishes, save session and transition directly to summary
-  const handleFinishBreathing = async (actualDuration: number) => {
+  // Called when user completes the breathing exercise
+  const handleFinishBreathing = (actualDuration: number) => {
     setSessionDuration(actualDuration);
+    setPostTension(null);
+    setCurrentStep('post-evaluation');
+  };
+
+  // Finish session: save strictly preserving nulls and show summary
+  const handleFinishSession = async (finalPost: number | null) => {
+    setPostTension(finalPost);
     const userId = getAnonymousUserId();
     const patternRaw = getPatternRaw(breathingSettings);
-    const effectivePre = preTension ?? 3;
-    const effectivePost = postTension ?? effectivePre;
 
+    // Strict Data Integrity: pre_tension and post_tension remain null if skipped
     const result = await saveSession({
       anonymous_user_id: userId,
-      pre_tension: effectivePre,
-      post_tension: effectivePost,
-      duration_seconds: actualDuration,
+      pre_tension: preTension,
+      post_tension: finalPost,
+      duration_seconds: sessionDuration,
       target_duration_seconds: breathingSettings.totalDurationSeconds,
       breathing_pattern: patternRaw,
     });
@@ -93,37 +101,19 @@ export function App() {
     setCurrentStep('summary');
   };
 
-  // Update optional tension ratings from the summary screen
-  const handleUpdateTension = async (newPre: number, newPost: number) => {
-    setPreTension(newPre);
-    setPostTension(newPost);
-    const userId = getAnonymousUserId();
-    const patternRaw = getPatternRaw(breathingSettings);
-
-    const result = await saveSession({
-      anonymous_user_id: userId,
-      pre_tension: newPre,
-      post_tension: newPost,
-      duration_seconds: sessionDuration,
-      target_duration_seconds: breathingSettings.totalDurationSeconds,
-      breathing_pattern: patternRaw,
-    });
-
-    setIsOffline(result.isOffline);
-  };
-
-  // Instant restart: goes straight into breathing
+  // Restart practice
   const handleRestart = () => {
+    setPreTension(null);
     setPostTension(null);
     setSessionDuration(breathingSettings.totalDurationSeconds);
-    setCurrentStep('breathing');
+    setCurrentStep('pre-evaluation');
   };
 
-  // Return to the minimal Home screen
+  // Return to minimal Home screen
   const handleGoHome = () => {
     setPreTension(null);
     setPostTension(null);
-    setCurrentStep('onboarding');
+    setCurrentStep('home');
   };
 
   return (
@@ -137,14 +127,29 @@ export function App() {
       {/* Main Container */}
       <main className="flex-1 flex flex-col max-w-md w-full mx-auto px-4 py-2 relative">
         <AnimatePresence mode="wait">
-          {currentStep === 'onboarding' && (
+          {currentStep === 'home' && (
             <StepOnboarding 
               key="home" 
-              onStartBreathing={handleStartBreathing}
+              onStart={handleStartFromHome}
               settings={breathingSettings}
               onUpdateSettings={handleUpdateSettings}
-              preTension={preTension}
-              onSelectPreTension={setPreTension}
+            />
+          )}
+
+          {currentStep === 'pre-evaluation' && (
+            <TensionScale
+              key="pre-evaluation"
+              title="Como você se percebe agora?"
+              subtitle="Selecione seu nível de tensão antes de respirar (opcional)."
+              value={preTension}
+              onChange={setPreTension}
+              confirmLabel="Continuar para Respiração"
+              skipLabel="Pular avaliação"
+              onConfirm={() => setCurrentStep('breathing')}
+              onSkip={() => {
+                setPreTension(null);
+                setCurrentStep('breathing');
+              }}
             />
           )}
 
@@ -154,6 +159,20 @@ export function App() {
               settings={breathingSettings}
               onUpdateSettings={handleUpdateSettings}
               onComplete={handleFinishBreathing}
+            />
+          )}
+
+          {currentStep === 'post-evaluation' && (
+            <TensionScale
+              key="post-evaluation"
+              title="Como você se percebe agora?"
+              subtitle="Selecione seu nível de tensão após o exercício (opcional)."
+              value={postTension}
+              onChange={setPostTension}
+              confirmLabel="Concluir e ver resumo"
+              skipLabel="Pular avaliação"
+              onConfirm={() => handleFinishSession(postTension)}
+              onSkip={() => handleFinishSession(null)}
             />
           )}
 
@@ -169,7 +188,6 @@ export function App() {
               onRestart={handleRestart}
               onGoHome={handleGoHome}
               onOpenPersonal={() => setIsPersonalOpen(true)}
-              onUpdateTension={handleUpdateTension}
             />
           )}
         </AnimatePresence>
@@ -186,7 +204,7 @@ export function App() {
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onGoHome={handleGoHome}
-        onStartPractice={handleStartBreathing}
+        onStartPractice={handleStartFromHome}
         onOpenAbout={() => setIsAboutOpen(true)}
         onOpenPersonal={() => setIsPersonalOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
@@ -208,11 +226,11 @@ export function App() {
         <PersonalDrawer 
           isOpen={isPersonalOpen} 
           onClose={() => setIsPersonalOpen(false)} 
-          onStartSession={handleStartBreathing}
+          onStartSession={handleStartFromHome}
         />
       </Suspense>
 
-      {/* Admin / Extension Research Metrics Drawer */}
+      {/* Admin / Global Extension Research Metrics Drawer */}
       <Suspense fallback={null}>
         <AdminDrawer isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
       </Suspense>

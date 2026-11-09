@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, TrendingDown, Trash2, RotateCcw, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
 import { SessionRecord } from '../types';
 import { getLocalSessions, clearLocalSessions } from '../lib/supabase';
-import { getTensionEmoji } from '../lib/constants';
 import { formatPatternDisplay, formatDurationLabel } from '../lib/settings';
 
 interface PersonalDrawerProps {
@@ -41,16 +40,21 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
   const handleExportCSV = () => {
     if (sessions.length === 0) return;
 
-    const headers = ['Data_Hora', 'Pre_Tensao_1a5', 'Post_Tensao_1a5', 'Alivio_Niveis', 'Duracao_Segundos', 'Tempo_Previsto_Segundos', 'Ritmo'];
-    const rows = sessions.map(s => [
-      s.created_at ? new Date(s.created_at).toLocaleString('pt-BR') : 'N/A',
-      s.pre_tension,
-      s.post_tension,
-      s.pre_tension - s.post_tension,
-      s.duration_seconds,
-      s.target_duration_seconds || 120,
-      s.breathing_pattern ? formatPatternDisplay(s.breathing_pattern) : '3:2:6',
-    ]);
+    const headers = ['Data_Hora', 'Pre_Tensao_0a10', 'Post_Tensao_0a10', 'Variacao', 'Duracao_Segundos', 'Tempo_Previsto_Segundos', 'Ritmo'];
+    const rows = sessions.map(s => {
+      const hasBoth = s.pre_tension !== null && s.pre_tension !== undefined &&
+                      s.post_tension !== null && s.post_tension !== undefined;
+      const variation = hasBoth ? (s.pre_tension! - s.post_tension!) : '';
+      return [
+        s.created_at ? new Date(s.created_at).toLocaleString('pt-BR') : '',
+        s.pre_tension !== null && s.pre_tension !== undefined ? s.pre_tension : '',
+        s.post_tension !== null && s.post_tension !== undefined ? s.post_tension : '',
+        variation,
+        s.duration_seconds,
+        s.target_duration_seconds || 120,
+        s.breathing_pattern ? formatPatternDisplay(s.breathing_pattern) : '3:2:6',
+      ];
+    });
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
@@ -62,12 +66,15 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
     document.body.removeChild(link);
   };
 
-  // Personal Metrics
+  // Personal Metrics with data integrity
   const totalSessions = sessions.length;
   const totalSeconds = sessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0);
-  const avgDelta = totalSessions > 0
-    ? (sessions.reduce((acc, s) => acc + (s.pre_tension - s.post_tension), 0) / totalSessions).toFixed(1)
-    : '0.0';
+  
+  const sessionsWithBoth = sessions.filter(s => s.pre_tension !== null && s.pre_tension !== undefined &&
+                                                s.post_tension !== null && s.post_tension !== undefined);
+  const avgDelta = sessionsWithBoth.length > 0
+    ? (sessionsWithBoth.reduce((acc, s) => acc + (s.pre_tension! - s.post_tension!), 0) / sessionsWithBoth.length).toFixed(1)
+    : '—';
 
   // Most frequent rhythm
   const patternCounts: Record<string, number> = {};
@@ -157,13 +164,14 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
 
                 <div 
                   className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 text-center"
-                  title="Média de redução da tensão entre antes e depois das práticas"
+                  title="Média de variação de tensão computada apenas nas sessões com avaliação antes e depois"
                 >
-                  <div className="text-[11px] uppercase font-bold text-stone-400">Alívio Médio</div>
+                  <div className="text-[11px] uppercase font-bold text-stone-400">Variação Média</div>
                   <div className="text-base font-bold text-emerald-700 dark:text-emerald-400 mt-2 flex items-center justify-center gap-1">
                     <TrendingDown className="w-4 h-4" />
-                    <span>{Number(avgDelta) > 0 ? `-${avgDelta}` : avgDelta}</span>
+                    <span>{avgDelta !== '—' && Number(avgDelta) > 0 ? `-${avgDelta}` : avgDelta}</span>
                   </div>
+                  <span className="text-[9px] text-stone-400 block mt-0.5">escala 0 a 10</span>
                 </div>
 
                 <div 
@@ -246,13 +254,18 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
                 ) : (
                   <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                     {sessions.map((s, idx) => {
-                      const delta = s.pre_tension - s.post_tension;
+                      const hasBoth = s.pre_tension !== null && s.pre_tension !== undefined &&
+                                      s.post_tension !== null && s.post_tension !== undefined;
+                      const deltaVal = hasBoth ? (s.pre_tension! - s.post_tension!) : null;
                       const pattern = s.breathing_pattern ? formatPatternDisplay(s.breathing_pattern) : '3:2:6';
                       const targetDur = s.target_duration_seconds || 120;
+                      
                       const formattedDate = s.created_at
-                        ? new Date(s.created_at).toLocaleString('pt-BR', {
+                        ? new Date(s.created_at).toLocaleDateString('pt-BR', {
                             day: '2-digit',
                             month: '2-digit',
+                            year: 'numeric'
+                          }) + ' às ' + new Date(s.created_at).toLocaleTimeString('pt-BR', {
                             hour: '2-digit',
                             minute: '2-digit',
                           })
@@ -275,15 +288,22 @@ export const PersonalDrawer: React.FC<PersonalDrawerProps> = ({ isOpen, onClose,
 
                             <div className="text-stone-600 dark:text-stone-400 flex items-center gap-2">
                               <span>
-                                {getTensionEmoji(s.pre_tension)} <strong>{s.pre_tension}</strong>
+                                Pré: <strong>{s.pre_tension !== null && s.pre_tension !== undefined ? s.pre_tension : '—'}</strong>
                                 <span className="mx-1 text-stone-400">→</span>
-                                {getTensionEmoji(s.post_tension)} <strong>{s.post_tension}</strong>
+                                Pós: <strong>{s.post_tension !== null && s.post_tension !== undefined ? s.post_tension : '—'}</strong>
                               </span>
-                              <span className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
-                                delta > 0 ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : delta === 0 ? 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400' : 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
-                              }`}>
-                                {delta > 0 ? `-${delta}` : delta === 0 ? 'Estável' : `+${Math.abs(delta)}`}
-                              </span>
+
+                              {hasBoth ? (
+                                <span className={`px-1.5 py-0.5 rounded text-[11px] font-bold ${
+                                  deltaVal! > 0 ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : deltaVal === 0 ? 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400' : 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
+                                }`}>
+                                  {deltaVal! > 0 ? `-${deltaVal}` : deltaVal === 0 ? '0' : `+${Math.abs(deltaVal!)}`}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-stone-400 italic">
+                                  (sem variação)
+                                </span>
+                              )}
                             </div>
                           </div>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Home, Wind, User, BookOpen, Info, PhoneCall, Sun, Moon } from 'lucide-react';
+import { X, Home, Wind, User, Globe, Info, PhoneCall, Sun, Moon } from 'lucide-react';
 
 interface NavigationMenuProps {
   isOpen: boolean;
@@ -114,11 +114,11 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
                 className="w-full p-3 rounded-2xl flex items-center gap-3 text-left font-medium text-sm text-stone-800 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800/70 transition-all"
               >
                 <div className="w-8 h-8 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center shrink-0">
-                  <BookOpen className="w-4 h-4 text-stone-600 dark:text-stone-300" />
+                  <Globe className="w-4 h-4 text-stone-600 dark:text-stone-300" />
                 </div>
                 <div>
-                  <span className="block leading-tight">Painel da Pesquisa</span>
-                  <span className="text-[11px] text-stone-400 dark:text-stone-500">Métricas anônimas da extensão</span>
+                  <span className="block leading-tight">Painel Global</span>
+                  <span className="text-[11px] text-stone-400 dark:text-stone-500">Métricas agregadas anônimas</span>
                 </div>
               </button>
 

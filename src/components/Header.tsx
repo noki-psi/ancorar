@@ -28,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMenu, onGoHome, stepProgre
               Ancorar
             </h1>
             <p className="text-[11px] text-stone-500 dark:text-stone-400 font-medium leading-none">
-              Pausa e Respiração
+              Pausa, respiração e reconexão
             </p>
           </div>
         </button>
