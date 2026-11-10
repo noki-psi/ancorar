@@ -42,7 +42,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-stone-200 dark:border-stone-800">
             <div>
-              <h2 className="text-xl font-bold tracking-tight">Sobre o Ancorar</h2>
+              <h2 className="text-xl font-bold tracking-tight">Sobre o AncorAR</h2>
               <p className="text-xs text-stone-500 dark:text-stone-400">
                 Espaço de pausa, autorregulação e respiração consciente
               </p>

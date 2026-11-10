@@ -188,6 +188,7 @@ export function App() {
               onRestart={handleRestart}
               onGoHome={handleGoHome}
               onOpenPersonal={() => setIsPersonalOpen(true)}
+              onOpenGlobal={() => setIsAdminOpen(true)}
             />
           )}
         </AnimatePresence>

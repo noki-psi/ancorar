@@ -1,19 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <defs>
-    <linearGradient id="ancorar-organic" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#a3c9b8" />
-      <stop offset="60%" stop-color="#7fae9b" />
-      <stop offset="100%" stop-color="#e5d7b5" />
+    <linearGradient id="wind-grad" x1="64" y1="85" x2="448" y2="427" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
     </linearGradient>
+    <radialGradient id="bg-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#122521" />
+      <stop offset="100%" stop-color="#0b1319" />
+    </radialGradient>
   </defs>
 
-  <!-- Deep petrol background -->
-  <rect width="48" height="48" rx="14" fill="#090f15" />
-  <rect x="0.75" y="0.75" width="46.5" height="46.5" rx="13.25" stroke="#11222d" stroke-width="1.5" />
+  <!-- Deep petrol & sage background -->
+  <rect width="512" height="512" rx="128" fill="url(#bg-glow)" />
+  <rect x="8" y="8" width="496" height="496" rx="120" stroke="#16382f" stroke-width="8" stroke-opacity="0.6" />
 
-  <!-- Zen breathing anchor symbol -->
-  <circle cx="24" cy="14" r="3.5" stroke="url(#ancorar-organic)" stroke-width="2.2" stroke-linecap="round" />
-  <line x1="24" y1="18" x2="24" y2="34" stroke="url(#ancorar-organic)" stroke-width="2.2" stroke-linecap="round" />
-  <line x1="17" y1="22" x2="31" y2="22" stroke="url(#ancorar-organic)" stroke-width="2" stroke-linecap="round" />
-  <path d="M13 28C14 34.5 19 37 24 37C29 37 34 34.5 35 28" stroke="url(#ancorar-organic)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Outer calm subtle aura ring -->
+  <circle cx="256" cy="256" r="216" stroke="url(#wind-grad)" stroke-width="6" stroke-dasharray="16 16" opacity="0.4" />
+
+  <!-- Wind breath flowing streams -->
+  <!-- Top wind current -->
+  <path 
+    d="M104 208H336C369.137 208 396 181.137 396 148C396 114.863 369.137 88 336 88C308 88 285 106 274 128" 
+    stroke="url(#wind-grad)" 
+    stroke-width="28" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+  />
+  <!-- Middle wind current -->
+  <path 
+    d="M84 280H376C409.137 280 436 306.863 436 340C436 373.137 409.137 400 376 400C344 400 318 374 318 344" 
+    stroke="url(#wind-grad)" 
+    stroke-width="28" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+  />
+  <!-- Bottom wind current -->
+  <path 
+    d="M136 352H240C262.091 352 280 334.091 280 312C280 289.909 262.091 272 240 272" 
+    stroke="url(#wind-grad)" 
+    stroke-width="28" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+  />
 </svg>

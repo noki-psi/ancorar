@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { RotateCcw, Send, Database, Home, User, CheckCircle2 } from 'lucide-react';
+import { RotateCcw, Send, Database, Home, User, Globe, CheckCircle2 } from 'lucide-react';
 import { getScaleLabel } from '../lib/constants';
 import { formatPatternDisplay } from '../lib/settings';
 
@@ -14,6 +14,7 @@ interface StepSummaryProps {
   onRestart: () => void;
   onGoHome: () => void;
   onOpenPersonal: () => void;
+  onOpenGlobal?: () => void;
 }
 
 export const StepSummary: React.FC<StepSummaryProps> = ({
@@ -26,6 +27,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   onRestart,
   onGoHome,
   onOpenPersonal,
+  onOpenGlobal,
 }) => {
   const hasBoth = preTension !== null && postTension !== null;
   const hasOnlyPre = preTension !== null && postTension === null;
@@ -197,6 +199,17 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
             <span>Meu Histórico</span>
           </button>
         </div>
+
+        {onOpenGlobal && (
+          <button
+            onClick={onOpenGlobal}
+            title="Abrir o Painel Global com métricas da pesquisa"
+            className="w-full py-2.5 px-3 rounded-xl text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800/60 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors border border-transparent hover:border-stone-200 dark:hover:border-stone-800"
+          >
+            <Globe className="w-3.5 h-3.5 text-stone-400" />
+            <span>Painel Global</span>
+          </button>
+        )}
       </div>
     </motion.div>
   );

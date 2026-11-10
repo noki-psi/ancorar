@@ -57,7 +57,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-stone-200 dark:border-stone-800">
               <div>
                 <h3 className="font-bold text-base tracking-tight">Menu Geral</h3>
-                <p className="text-xs text-stone-500 dark:text-stone-400">Navegação do Ancorar</p>
+                <p className="text-xs text-stone-500 dark:text-stone-400">Navegação do AncorAR</p>
               </div>
               <button
                 onClick={onClose}
@@ -173,7 +173,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
             </a>
 
             <p className="text-[10px] text-stone-400 text-center">
-              Ancorar • Versão 1.2
+              AncorAR • Versão 1.2
             </p>
           </div>
         </motion.div>

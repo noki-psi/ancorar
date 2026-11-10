@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMenu, onGoHome, stepProgre
           <Logo size={30} />
           <div>
             <h1 className="text-base font-bold tracking-tight text-stone-900 dark:text-stone-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
-              Ancorar
+              AncorAR
             </h1>
             <p className="text-[11px] text-stone-500 dark:text-stone-400 font-medium leading-none">
               Pausa, respiração e reconexão

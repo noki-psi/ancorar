@@ -50,7 +50,7 @@ export const StepOnboarding: React.FC<StepOnboardingProps> = ({
         >
           <Wind className="w-8 h-8 text-emerald-700 dark:text-emerald-400 mb-1 stroke-[1.6]" />
           <span className="text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase tracking-widest">
-            Ancorar
+            AncorAR
           </span>
         </motion.div>
       </div>
@@ -58,7 +58,7 @@ export const StepOnboarding: React.FC<StepOnboardingProps> = ({
       {/* Brief, Serene Presentation with Generous Space */}
       <div className="space-y-2 mb-8">
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 dark:text-stone-100">
-          Pausa, respiração e reconexão
+          Respiração guiada
         </h2>
         <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 max-w-xs mx-auto leading-relaxed font-normal">
           Um espaço simples para desacelerar o ritmo e respirar conscientemente.

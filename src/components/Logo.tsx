@@ -14,37 +14,44 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 28 }) => {
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-label="Logo Ancorar"
+      aria-label="Logo AncorAR"
     >
       <defs>
-        <linearGradient id="ancorar-organic" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#a3c9b8" />
-          <stop offset="60%" stopColor="#7fae9b" />
-          <stop offset="100%" stopColor="#e5d7b5" />
+        <linearGradient id="ancorar-wind-grad" x1="6" y1="8" x2="42" y2="40" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#34d399" />
+          <stop offset="50%" stopColor="#10b981" />
+          <stop offset="100%" stopColor="#059669" />
         </linearGradient>
       </defs>
 
-      {/* Organic outer calming circle */}
-      <circle cx="24" cy="24" r="21" stroke="#11222d" strokeWidth="1.5" />
-      <circle cx="24" cy="24" r="21" stroke="url(#ancorar-organic)" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
+      {/* Gentle zen aura circle */}
+      <circle cx="24" cy="24" r="21" stroke="#10b981" strokeWidth="1.5" strokeOpacity="0.25" />
+      <circle cx="24" cy="24" r="21" stroke="url(#ancorar-wind-grad)" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.6" />
 
-      {/* Zen top mindful ring */}
-      <circle cx="24" cy="14" r="3.5" stroke="url(#ancorar-organic)" strokeWidth="2.2" strokeLinecap="round" />
-      
-      {/* Central grounded anchor stem */}
-      <line x1="24" y1="18" x2="24" y2="34" stroke="url(#ancorar-organic)" strokeWidth="2.2" strokeLinecap="round" />
-      
-      {/* Horizontal balance bar */}
-      <line x1="17" y1="22" x2="31" y2="22" stroke="url(#ancorar-organic)" strokeWidth="2" strokeLinecap="round" />
-      
-      {/* Smooth calming wave base */}
+      {/* Wind breath paths (flowing organic breeze) */}
       <path 
-        d="M13 28C14 34.5 19 37 24 37C29 37 34 34.5 35 28" 
-        stroke="url(#ancorar-organic)" 
-        strokeWidth="2.2" 
+        d="M9 19H31C34.3137 19 37 16.3137 37 13C37 9.68629 34.3137 7 31 7C28.5 7 26.5 8.5 25.5 10.5" 
+        stroke="url(#ancorar-wind-grad)" 
+        strokeWidth="2.75" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+      />
+      <path 
+        d="M7 26H35C38.3137 26 41 28.6863 41 32C41 35.3137 38.3137 38 35 38C32 38 29.5 35.5 29.5 32.5" 
+        stroke="url(#ancorar-wind-grad)" 
+        strokeWidth="2.75" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+      />
+      <path 
+        d="M12 33H22C24.2091 33 26 31.2091 26 29C26 26.7909 24.2091 25 22 25" 
+        stroke="url(#ancorar-wind-grad)" 
+        strokeWidth="2.75" 
         strokeLinecap="round" 
         strokeLinejoin="round" 
       />
     </svg>
   );
 };
+
+export default Logo;
