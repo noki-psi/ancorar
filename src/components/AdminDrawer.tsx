@@ -239,16 +239,6 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
                 </div>
               </div>
 
-              {/* Action: Export CSV */}
-              <button
-                onClick={exportCSV}
-                title="Baixar planilha CSV com todos os dados brutos anônimos"
-                className="w-full py-3.5 px-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-transform"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>Exportar CSV do Painel Global</span>
-              </button>
-
               {/* Setup Helper if Supabase not configured */}
               {!isSupabaseConfigured && (
                 <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 text-amber-900 dark:text-amber-200 text-xs space-y-1">
@@ -262,13 +252,22 @@ export const AdminDrawer: React.FC<AdminDrawerProps> = ({ isOpen, onClose }) => 
                 </div>
               )}
 
-              {/* Recent Sessions List with Dates */}
+              {/* Recent Sessions List */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-stone-400">
                     Histórico de Registros ({sessions.length})
                   </h4>
-                  <span className="text-[10px] text-stone-400">Com data e hora</span>
+                  {sessions.length > 0 && (
+                    <button
+                      onClick={exportCSV}
+                      title="Baixar planilha CSV com os dados anônimos"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 hover:bg-stone-100 dark:bg-stone-900 dark:hover:bg-stone-800 text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 text-[11px] font-medium transition-colors"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-stone-400" />
+                      <span>Exportar CSV</span>
+                    </button>
+                  )}
                 </div>
 
                 {sessions.length === 0 ? (

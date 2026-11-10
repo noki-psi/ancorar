@@ -148,7 +148,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
                 {theme === 'light' ? (
                   <>
                     <Sun className="w-4 h-4 text-amber-600" />
-                    <span>Tema Claro (Sóbrio)</span>
+                    <span>Tema Claro</span>
                   </>
                 ) : (
                   <>
